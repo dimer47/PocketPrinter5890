@@ -1,17 +1,25 @@
 # PocketPrinter5890
 
-Librairie Swift pour piloter en Bluetooth Low Energy les mini imprimantes
-thermiques de poche vendues chez Lidl sous les marques **Tronic**,
-**SILVERCREST** et **Parkside**, sans passer par l'application officielle et
-sans service cloud.
+*[Version française](README_FR.md)*
 
-Le protocole a ete etabli par retro-ingenierie: analyse des trames BLE
-echangees avec la machine, puis decompilation de l'application officielle
-`com.printer.lidloffice`, qui embarque le **LuckPrinter SDK**.
+Swift library for driving over Bluetooth Low Energy the thermal pocket
+printers sold by Lidl under the **Tronic**, **SILVERCREST** and **Parkside**
+brands, without the official app and without any cloud service.
 
-## Materiel cible
+The protocol was established by reverse engineering: analysis of the BLE
+frames exchanged with the device, then decompilation of the official
+`com.printer.lidloffice` application, which embeds the **LuckPrinter SDK**.
 
-References relevees sur la plaque de l'appareil:
+| TRONIC | SILVERCREST |
+|---|---|
+| ![TRONIC pocket printer](docs/images/tronic-1.jpg) | ![SILVERCREST pocket printer](docs/images/silvercrest-1.jpg) |
+
+The two brands ship the same hardware, the same firmware and the same
+official application: only the logo on the lid differs.
+
+## Target hardware
+
+Markings found on the device label:
 
 ```text
 TRONIC
@@ -25,56 +33,64 @@ Frequency    : 2402-2480 MHz
 Manufactured : 09-2025
 ```
 
-Distribue par Karsten International, Overschiestraat 63, 1062 XD Amsterdam,
-Pays-Bas — <info@karsten.nl> — fabrique en Chine.
+Distributed by Karsten International, Overschiestraat 63, 1062 XD Amsterdam,
+Netherlands — <info@karsten.nl> — made in China.
 
-### Declinaisons connues
+### Known variants
 
-Le meme materiel est vendu sous plusieurs marques Lidl, avec la meme
-application officielle:
+The same hardware is sold under several Lidl brands, with the same official
+application:
 
-| Marque | Reference Lidl | IAN | Bluetooth | Poids |
+| Brand | Lidl reference | IAN | Bluetooth | Weight |
 |---|---|---|---|---|
 | TRONIC | 100406318 | 508705_2507 | 5.3 | ~166 g |
 | SILVERCREST | 100390313 | — | 5.0 | ~149 g |
 
-Caracteristiques communes: impression thermique sans encre, 203 dpi, rouleau
-de 7,8 m, batterie Li-ion 1200 mAh, USB-C, dimensions ~89 x 42 mm.
+Shared characteristics: inkless thermal printing, 203 dpi, 7.8 m roll,
+1200 mAh Li-ion battery, USB-C, roughly 89 x 42 mm.
 
-### Identite retournee par la machine
+![The printer in use](docs/images/tronic-3.jpg)
+
+*Images: Lidl product pages.*
+
+### Identity reported by the device
 
 ```text
-Modele   : A2Y        (10 FF 20 F0)
+Model    : A2Y        (10 FF 20 F0)
 Firmware : V1.06LY    (10 FF 20 F1)
-Nom BLE  : Mini Pocket Printer_BLE
+BLE name : Mini Pocket Printer_BLE
 ```
 
-Le modele `A2Y` correspond dans le SDK officiel a la classe
-`MiniPocketPrinter`, qui herite de `DP_D1`.
+In the official SDK, model `A2Y` maps to the `MiniPocketPrinter` class, which
+inherits from `DP_D1`.
 
-> **Ce materiel n'est pas une DP-L13.** La documentation publique de la L13
-> (imprimante d'etiquettes 14 mm, raster 96 px) decrit un modele different.
-> Appliquer ses specifications a cette machine empeche toute impression.
+> **This hardware is not a DP-L13.** The public documentation for the L13
+> (a 14 mm label printer, 96 px raster) describes a different model. Applying
+> its specifications to this device prevents printing altogether.
 
 ## Installation
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<vous>/PocketPrinter5890.git", from: "1.0.0")
+    .package(url: "https://github.com/<you>/PocketPrinter5890.git", from: "1.0.0")
 ]
 ```
 
-Plateformes: **macOS 10.15+**, **iOS 13+**. Ces planchers sont fixes par
-`@Published` (Combine), qui n'existe pas avant.
+Platforms: **macOS 10.15+**, **iOS 13+**, **iPadOS 13+**. Those floors are set
+by `@Published` (Combine), which does not exist before. iPadOS builds from the
+same iOS targets.
 
-Deux produits:
+`ReceiptRenderer`, which draws receipts with AppKit, is compiled on macOS
+only. Everything else — protocol, documents, barcodes, QR codes, BLE
+transport — works on all three platforms.
 
-- `PocketPrinter5890Kit` — protocole, documents, rendu, codes-barres.
-  Aucune dependance a CoreBluetooth: utilisable avec n'importe quel
-  transport.
-- `PocketPrinter5890BLE` — transport CoreBluetooth pret a l'emploi.
+Two products:
 
-## Utilisation
+- `PocketPrinter5890Kit` — protocol, documents, rendering, barcodes. No
+  CoreBluetooth dependency: usable with any transport.
+- `PocketPrinter5890BLE` — ready-to-use CoreBluetooth transport.
+
+## Usage
 
 ```swift
 import PocketPrinter5890Kit
@@ -83,132 +99,132 @@ import PocketPrinter5890BLE
 let transport = PocketPrinter5890BLE()
 let printer = PocketPrinter(transport: transport)
 
-// Informations
-printer.readDeviceInformation()      // modele, firmware, batterie, papier
+// Device information
+printer.readDeviceInformation()      // model, firmware, battery, paper
 printer.setDensity(.strong)
 
-// Document compose
+// Composed document
 var document = PrintDocument()
-document.append(.title("BOULANGERIE"))
-document.append(.centered("12 rue des Lilas"))
+document.append(.title("BAKERY"))
+document.append(.centered("12 Lilac Street"))
 document.append(.separator(character: "-"))
-document.append(.text(TextLayout.columns("2x Baguette", "2,40 EUR", width: 32)))
-document.append(try PrintElement.qr("https://exemple.fr"))
+document.append(.text(TextLayout.columns("2x Baguette", "2.40 EUR", width: 32)))
+document.append(try PrintElement.qr("https://example.com"))
 document.append(try PrintElement.code("REF12345", symbology: .ean13))
 printer.print(document)
 ```
 
-Impression d'une image (macOS):
+Printing an image (macOS):
 
 ```swift
 let renderer = ReceiptRenderer(width: 384, ditherMode: .floydSteinberg)
-printer.print(try renderer.bitmap(from: monImage))
+printer.print(try renderer.bitmap(from: myImage))
 ```
 
-## Protocole
+## Protocol
 
-### Sequence d'activation, indispensable
+### Activation sequence, mandatory
 
-Sans elle, le firmware acquitte chaque commande et **n'execute rien**, pas
-meme une avance papier. Elle provient de `DP_D1.printTagOnce()` dans le SDK.
+Without it the firmware acknowledges every command and **executes nothing**,
+not even a paper feed. It comes from `DP_D1.printTagOnce()` in the SDK.
 
 ```text
-10 FF F1 03                      activation du moteur
-00 x12                           reveil (commande SEPAREE du enable)
-1F 80 <type> <len>               longueur d'etiquette (mode etiquette seul)
-1D 76 30 00 30 00 <yL> <yH> ...  raster, par bandes de 24 lignes
-1B 4A <n>                        degagement papier
-1D 0C                            calage (mode etiquette seul)
-10 FF F1 45                      fin de travail
+10 FF F1 03                      enable the motor
+00 x12                           wake-up (a SEPARATE command)
+1F 80 <type> <len>               label length (label mode only)
+1D 76 30 00 30 00 <yL> <yH> ...  raster, in bands of 24 lines
+1B 4A <n>                        paper clearance
+1D 0C                            positioning (label mode only)
+10 FF F1 45                      end of job
 ```
 
-Les douze zeros forment une commande distincte: plusieurs documentations
-publiques les accolent a tort a `10 FF F1 03`.
+The twelve zero bytes form a distinct command: several public write-ups
+wrongly append them to `10 FF F1 03`.
 
 ### Raster
 
 ```text
-Largeur : 384 px = 48 octets par ligne  ->  xL xH = 30 00
-Encodage: 1 bit par pixel, MSB first, bit a 1 = point noir
-Bandes  : 24 lignes par commande; un raster envoye d'un bloc est perdu
+Width   : 384 px = 48 bytes per line  ->  xL xH = 30 00
+Encoding: 1 bit per pixel, MSB first, bit set = black dot
+Bands   : 24 lines per command; a raster sent in one block is dropped
 ```
 
-La tete couvre 48 mm sur un papier de ~56 mm: environ 8 mm de marges
-physiques sont normales et non corrigeables logiciellement.
+The print head covers 48 mm on ~56 mm paper: about 8 mm of physical margins
+are expected and cannot be corrected in software.
 
-### Controle de flux
+### Flow control
 
-Les trames `01 nn` recues **ne sont ni des statuts ni des acquittements**:
-elles annoncent que l'imprimante peut accepter `nn` paquets supplementaires.
-Le SDK fait `credit.addAndGet(bArr[1] & 0xFF)` puis envoie jusqu'a `credit`
-paquets d'affilee. Ignorer ce mecanisme divise le debit par vingt.
+Incoming `01 nn` frames are **neither status nor acknowledgements**: they
+announce that the printer can accept `nn` more packets. The SDK does
+`credit.addAndGet(bArr[1] & 0xFF)` then sends up to `credit` packets in a
+row. Ignoring this mechanism divides throughput by twenty.
 
 ### BLE
 
-Service **FF00**: ecriture sur `FF02`, notifications sur `FF01` et `FF03`.
-Les trois autres services annonces (Microchip Transparent UART, `18F0`,
-`e781...`) acceptent l'ecriture mais ne notifient jamais.
+Service **FF00**: write to `FF02`, notifications on `FF01` and `FF03`. The
+three other advertised services (Microchip Transparent UART, `18F0`,
+`e781...`) accept writes but never notify.
 
-Reponses observees:
+Observed responses:
 
 ```text
-FF01: 41 32 59              "A2Y"       modele
+FF01: 41 32 59              "A2Y"       model
 FF01: 56 31 2E 30 36 4C 59  "V1.06LY"   firmware
-FF01: 00 62                 98 %        batterie (2e octet)
-FF01: 4F 4B                 "OK"        commande acceptee
-FF03: 01 nn                             credit de flux
+FF01: 00 62                 98 %        battery (second byte)
+FF01: 4F 4B                 "OK"        command accepted
+FF03: 01 nn                             flow-control credit
 ```
 
-## Limites du firmware
+## Firmware limitations
 
-Etablies experimentalement, pas supposees:
+Established by measurement, not assumed:
 
-| Fonction | Etat |
+| Feature | State |
 |---|---|
-| `ESC t` pages de code | **Ignoree.** Neuf pages testees, neuf lignes identiques et illisibles. Laisse meme un octet parasite s'imprimer. |
-| Accents, `°`, symboles | **Non geres** en mode texte: carre plein. Le texte est translitere en ASCII (`18°C` -> `18degC`). |
-| `GS B` inversion video | Non implementee. |
-| `GS ( k` QR code | **Non implementee**: s'imprime en clair (`k1A2k1Ck1E1k1P0...`). |
-| `GS k` code-barres | **Non implementee**: s'imprime en clair (`<I{BMETEO2026`). |
+| `ESC t` code pages | **Ignored.** Nine pages tested, nine identical unreadable lines. It even lets a stray byte print. |
+| Accents, `°`, symbols | **Unsupported** in text mode: solid block. Text is transliterated to ASCII (`18°C` -> `18degC`). |
+| `GS B` reverse video | Not implemented. |
+| `GS ( k` QR code | **Not implemented**: prints as plain text (`k1A2k1Ck1E1k1P0...`). |
+| `GS k` barcode | **Not implemented**: prints as plain text (`<I{BMETEO2026`). |
 
-Le SDK officiel n'expose d'ailleurs **aucune** fonction d'impression de
-texte: l'application rend tout en bitmap cote telephone. Le mode texte natif
-de cette librairie fonctionne mais reste hors des sentiers battus par le
-fabricant.
+The official SDK exposes **no** text-printing function at all: the app
+renders everything to a bitmap on the phone. The native text mode in this
+library works but stays off the path the manufacturer took.
 
-Consequence pratique: les codes sont generes en image. Les codes-barres
-lineaires (Code 128, Code 39, EAN-13, EAN-8) sont produits en **Swift pur**,
-sans dependance systeme; les QR codes s'appuient sur CoreImage, isole
-derriere `CodeBitmaps.qrMatrix` pour rester remplacable.
+Practical consequence: codes are generated as images. Linear barcodes
+(Code 128, Code 39, EAN-13, EAN-8) are produced in **pure Swift**, with no
+system dependency; QR codes rely on CoreImage, isolated behind
+`CodeBitmaps.qrMatrix` so it stays replaceable.
 
-## Modes papier
+## Paper modes
 
-- **Papier continu**: aucune longueur declaree, l'impression s'arrete a la
-  fin du contenu. Une avance de degagement (80 points par defaut, ~10 mm)
-  sort le ticket de sous la tete d'impression.
-- **Etiquettes**: longueur declaree via `1F 80`, calage `1D 0C` entre chaque.
+- **Continuous paper**: no declared length, printing stops at the end of the
+  content. A clearance feed (80 dots by default, ~10 mm) pushes the receipt
+  clear of the print head.
+- **Labels**: length declared through `1F 80`, positioning `1D 0C` between
+  each one.
 
-Le SDK distingue ces cas par `printOnce()` et `printTagOnce()`. Envoyer
-`1F 80` sur du papier continu fait derouler du papier inutilement.
+The SDK separates these cases with `printOnce()` and `printTagOnce()`.
+Sending `1F 80` on continuous paper wastes paper.
 
-## Structure du depot
+## Repository layout
 
 ```text
-Sources/PocketPrinter5890Kit/    librairie: protocole, documents, rendu, codes
-Sources/PocketPrinter5890BLE/    transport CoreBluetooth
-Sources/PocketPrinter5890Probe/  outil console de diagnostic
-Tests/                           89 tests unitaires
-Examples/DemoApp/                application macOS SwiftUI de demonstration
-docs/PROTOCOLE.md                notes detaillees de retro-ingenierie
+Sources/PocketPrinter5890Kit/    library: protocol, documents, rendering, codes
+Sources/PocketPrinter5890BLE/    CoreBluetooth transport
+Sources/PocketPrinter5890Probe/  console diagnostic tool
+Tests/                           89 unit tests
+Examples/DemoApp/                macOS SwiftUI demonstration app
+docs/PROTOCOLE.md                detailed reverse-engineering notes
 ```
 
-## Diagnostic en console
+## Console diagnostics
 
 ```bash
-swift run PocketPrinter5890Probe --profile=ff00              # infos machine
-swift run PocketPrinter5890Probe --profile=ff00 --feed-big   # avance papier
-swift run PocketPrinter5890Probe --profile=ff00 --print-test # mire de largeur
-swift run PocketPrinter5890Probe --profile=ff00 --code-pages # test pages de code
+swift run PocketPrinter5890Probe --profile=ff00              # device info
+swift run PocketPrinter5890Probe --profile=ff00 --feed-big   # paper feed
+swift run PocketPrinter5890Probe --profile=ff00 --print-test # width pattern
+swift run PocketPrinter5890Probe --profile=ff00 --code-pages # code page probe
 ```
 
 ## Tests
@@ -217,22 +233,32 @@ swift run PocketPrinter5890Probe --profile=ff00 --code-pages # test pages de cod
 swift test
 ```
 
-## Etat de validation
+## Validation status
 
-Confirme sur le materiel: impression raster, avance papier, degagement, modes
-papier, texte natif, QR codes et codes-barres, lecture modele / firmware /
-batterie / papier, controle de flux.
+Confirmed on hardware: raster printing, paper feed, clearance, paper modes,
+native text, QR codes and barcodes, reading model / firmware / battery /
+paper, flow control.
 
-Portees depuis le SDK mais **non testees** sur ce firmware, signalees dans le
-code: vitesse d'impression, niveau de chauffe, horloge interne, marques de
-decoupe, mode d'impression, reglages d'usine.
+Ported from the SDK but **untested** on this firmware, flagged in the code:
+print speed, heating level, internal clock, cut marks, printer mode, factory
+reset.
 
-Volontairement non portee: la mise a jour du firmware
-(`updatePrinterLuck`). Un portage non teste qui echoue en cours d'ecriture
-rendrait l'imprimante inutilisable.
+Deliberately not ported: firmware update (`updatePrinterLuck`). An untested
+port failing mid-write would leave the printer unusable.
+
+## To do
+
+- **Standalone protocol document** covering every decoded frame, aimed at
+  reimplementation in another language (Python, Go, Java...) without going
+  through the Swift library.
+- Compressed raster (`setCompress(true)` for the A2Y), to speed up large
+  jobs.
+- MTU negotiation up to 512 bytes; currently pinned at 180.
+- Grayscale printing (`getRealGrayLevel`).
+- Hardware verification of the ported but untested commands.
 
 ## Licence
 
-Retro-ingenierie a fin d'interoperabilite, sur du materiel acquis
-legalement. Aucun code du SDK officiel n'est redistribue: seules les
-sequences d'octets du protocole ont ete reimplementees.
+Reverse engineering for interoperability, on legally acquired hardware. No
+code from the official SDK is redistributed: only the protocol byte sequences
+have been reimplemented.

@@ -7,16 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10000000000000000000201 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000200 /* Localizable.strings */; };
 		A10000000000000000000001 /* PocketPrinter5890App.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* PocketPrinter5890App.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* ContentView.swift */; };
+		A10000000000000000000211 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000210 /* AppLanguage.swift */; };
 		A10000000000000000000003 /* PocketPrinter5890Kit in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000031 /* PocketPrinter5890Kit */; };
 		A10000000000000000000004 /* PocketPrinter5890BLE in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000032 /* PocketPrinter5890BLE */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A10000000000000000000202 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Sources/PocketPrinter5890App/Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A10000000000000000000203 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Sources/PocketPrinter5890App/Resources/fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A10000000000000000000010 /* PocketPrinter5890App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketPrinter5890App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000011 /* PocketPrinter5890App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890App/PocketPrinter5890App.swift; sourceTree = "<group>"; };
 		A10000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890App/ContentView.swift; sourceTree = "<group>"; };
+		A10000000000000000000210 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890App/AppLanguage.swift; sourceTree = "<group>"; };
 		A10000000000000000000013 /* AppInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = AppInfo.plist; sourceTree = "<group>"; };
 		A10000000000000000000014 /* PocketPrinter5890App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PocketPrinter5890App.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -47,6 +52,7 @@
 			children = (
 				A10000000000000000000011 /* PocketPrinter5890App.swift */,
 				A10000000000000000000012 /* ContentView.swift */,
+				A10000000000000000000210 /* AppLanguage.swift */,
 				A10000000000000000000013 /* AppInfo.plist */,
 				A10000000000000000000014 /* PocketPrinter5890App.entitlements */,
 			);
@@ -86,6 +92,18 @@
 		};
 /* End PBXNativeTarget section */
 
+/* Begin PBXVariantGroup section */
+		A10000000000000000000200 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A10000000000000000000202 /* en */,
+				A10000000000000000000203 /* fr */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin PBXProject section */
 		A10000000000000000000080 /* Project object */ = {
 			isa = PBXProject;
@@ -105,11 +123,12 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				fr,
 				Base,
 			);
 			mainGroup = A10000000000000000000040;
 			packageReferences = (
-				A10000000000000000000030 /* XCLocalSwiftPackageReference "." */,
+				A10000000000000000000030 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			productRefGroup = A10000000000000000000060 /* Products */;
 			projectDirPath = "";
@@ -125,6 +144,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000201 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +157,7 @@
 			files = (
 				A10000000000000000000001 /* PocketPrinter5890App.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
+				A10000000000000000000211 /* AppLanguage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -320,21 +341,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		A10000000000000000000030 /* XCLocalSwiftPackageReference "." */ = {
+		A10000000000000000000030 /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ".";
+			relativePath = "../..";
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		A10000000000000000000031 /* PocketPrinter5890Kit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A10000000000000000000030 /* XCLocalSwiftPackageReference "." */;
+			package = A10000000000000000000030 /* XCLocalSwiftPackageReference "../.." */;
 			productName = PocketPrinter5890Kit;
 		};
 		A10000000000000000000032 /* PocketPrinter5890BLE */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A10000000000000000000030 /* XCLocalSwiftPackageReference "." */;
+			package = A10000000000000000000030 /* XCLocalSwiftPackageReference "../.." */;
 			productName = PocketPrinter5890BLE;
 		};
 /* End XCSwiftPackageProductDependency section */

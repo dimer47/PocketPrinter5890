@@ -1,0 +1,68 @@
+/* Titre et en-tete */
+"app.title" = "Pocket Printer 5890";
+"app.subtitle" = "58 mm pocket printer - 384 px, model A2Y.";
+
+/* Connexion */
+"scan.start" = "Scan";
+"scan.stop" = "Stop";
+"device.disconnect" = "Disconnect";
+"device.filter" = "Show likely printers only";
+"device.candidate" = "Likely printer";
+"ble.channel" = "BLE channel";
+"ble.automatic" = "Automatic (FF00 first)";
+"gatt.title" = "Selected GATT";
+"battery.loading" = "Battery...";
+
+/* Informations */
+"info.read" = "Read model / firmware / battery / paper";
+"paper.check" = "Check paper only";
+
+/* Reglages */
+"settings.width" = "Width";
+"settings.density" = "Density";
+"settings.paper" = "Paper";
+"settings.dither" = "Dithering";
+"settings.creditFlow" = "Credit-based flow control";
+"settings.threshold" = "Black/white threshold %d";
+"settings.packet" = "BLE packet %d bytes";
+"settings.feed" = "Paper clearance %d dots (~%d mm)";
+"settings.labelLength" = "Label length %d";
+
+/* Impression */
+"print.receipt" = "Print receipt";
+"print.pattern" = "Print test pattern";
+"print.text" = "Print this text";
+"print.clearPaper" = "Feed paper (%d dots)";
+"demo.weather" = "Weather + horoscope demo";
+"demo.typography" = "Typography sampler";
+
+/* Editeur */
+"editor.title" = "Test receipt";
+"editor.merchant" = "Merchant";
+"editor.address" = "Address";
+"editor.date" = "Date";
+"editor.items" = "Items";
+"editor.item" = "Item";
+"editor.price" = "Price";
+"editor.footer" = "Receipt footer";
+"editor.add" = "Add";
+"editor.remove" = "Remove";
+"editor.reset" = "Reset";
+
+/* Texte natif */
+"text.native" = "Native text (no rasterisation)";
+"text.sample" = "HELLO\nThis is a native text test.";
+"text.bold" = "Bold";
+"text.size" = "Size %d";
+
+/* Apercu et console */
+"preview.title" = "Monochrome preview %d px, variable length";
+"console.title" = "Hex RX/TX console";
+
+/* Erreurs */
+"error.render" = "Render error: %@";
+"error.pattern" = "Test pattern error: %@";
+
+/* Langue */
+"menu.language" = "Language";
+"language.system" = "System";

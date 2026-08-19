@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var ditherMode: DitherMode = .floydSteinberg
     @State private var feedDots = 80.0
     @State private var labelLength = 32.0
-    @State private var freeText = "BONJOUR\nCeci est un test de texte natif."
+    @State private var freeText = NSLocalizedString("text.sample", comment: "")
     @State private var textSize = 1
     @State private var textBold = false
     @State private var textAlignment: ESCPOS.Alignment = .left
@@ -20,14 +20,19 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             sidebar
-                .navigationSplitViewColumnWidth(min: 320, ideal: 360, max: 460)
+                // Colonne compressible: sur un ecran etroit elle se reduit
+                // au lieu de pousser la fenetre hors de l'ecran.
+                .navigationSplitViewColumnWidth(min: 260, ideal: 340, max: 460)
         } detail: {
             HSplitView {
-                editor.frame(minWidth: 380)
-                previewAndConsole.frame(minWidth: 460)
+                editor.frame(minWidth: 300)
+                previewAndConsole.frame(minWidth: 320)
             }
         }
-        .frame(minWidth: 1040, minHeight: 720)
+        // Taille minimale volontairement basse: la fenetre doit tenir sur
+        // un ecran de portable, quitte a comprimer les colonnes. Une
+        // contrainte trop haute faisait deborder la fenetre hors de l'ecran.
+        .frame(minWidth: 900, idealWidth: 1200, minHeight: 560, idealHeight: 800)
     }
 
     private var sidebar: some View {
@@ -39,9 +44,9 @@ struct ContentView: View {
 
     private var sidebarContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("L13 Receipt Printer")
+            Text("app.title")
                 .font(.title2.weight(.semibold))
-            Text("Mini imprimante de poche 58 mm - 384 px, modele A2Y.")
+            Text("app.subtitle")
                 .font(.callout)
                 .foregroundStyle(.secondary)
             if transport.isConnected {
@@ -56,19 +61,19 @@ struct ContentView: View {
                 .lineLimit(2)
 
             HStack {
-                Button(transport.isScanning ? "Arreter" : "Rechercher") {
+                Button(transport.isScanning ? "scan.stop" : "scan.start") {
                     transport.isScanning ? transport.stopScan() : transport.startScan()
                 }
                 .buttonStyle(.borderedProminent)
 
-                Button("Deconnecter") {
+                Button("device.disconnect") {
                     transport.disconnect()
                 }
                 .disabled(!transport.isConnected)
             }
-            Toggle("Afficher seulement les imprimantes probables", isOn: $transport.showOnlyLikelyPrinters)
-            Picker("Canal BLE", selection: $transport.preferredProfileID) {
-                Text("Automatique (FF00 d'abord)").tag(PrinterBLEProfiles.automaticID)
+            Toggle("device.filter", isOn: $transport.showOnlyLikelyPrinters)
+            Picker("ble.channel", selection: $transport.preferredProfileID) {
+                Text("ble.automatic").tag(PrinterBLEProfiles.automaticID)
                 ForEach(PrinterBLEProfiles.preferred) { profile in
                     Text(profile.id).tag(profile.id)
                 }
@@ -82,7 +87,7 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(device.name)
                         if device.isLikelyL13 {
-                            Text("Candidat imprimante")
+                            Text("device.candidate")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.green)
                         }
@@ -96,7 +101,7 @@ struct ContentView: View {
             }
             .frame(minHeight: 170)
 
-            GroupBox("GATT retenu") {
+            GroupBox("gatt.title") {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Service: \(transport.selectedService)")
                     Text("RX: \(transport.selectedRX)")
@@ -107,33 +112,33 @@ struct ContentView: View {
                 .textSelection(.enabled)
             }
 
-            Button("Lire modele / firmware / batterie / papier") {
+            Button("info.read") {
                 transport.readDeviceInformation()
             }
             .disabled(!transport.isConnected)
 
-            Button("Verifier papier seulement") {
+            Button("paper.check") {
                 transport.send(PrinterCommand.paperStatus, label: "Verifier papier")
             }
             .disabled(!transport.isConnected)
 
             printSettings
 
-            Button("Imprimer le ticket") {
+            Button("print.receipt") {
                 sendReceipt()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .disabled(!transport.isConnected)
 
-            Button("Imprimer une mire") {
+            Button("print.pattern") {
                 sendTestPattern()
             }
             .disabled(!transport.isConnected)
 
             Divider()
 
-            Text("Texte natif (sans rasterisation)")
+            Text("text.native")
                 .font(.headline)
             TextEditor(text: $freeText)
                 .font(.system(.body, design: .monospaced))
@@ -146,10 +151,10 @@ struct ContentView: View {
                     }
                 }
                 .labelsHidden()
-                Stepper("Taille \(textSize)", value: $textSize, in: 1...4)
-                Toggle("Gras", isOn: $textBold)
+                Stepper(String(format: NSLocalizedString("text.size", comment: ""), textSize), value: $textSize, in: 1...4)
+                Toggle("text.bold", isOn: $textBold)
             }
-            Button("Imprimer ce texte") {
+            Button("print.text") {
                 printer().print(
                     text: freeText,
                     size: textSize,
@@ -162,17 +167,17 @@ struct ContentView: View {
 
             Divider()
 
-            Button("Demo meteo + horoscope") {
+            Button("demo.weather") {
                 printer().print(DemoDocuments.weatherAndHoroscope(), options: options())
             }
             .disabled(!transport.isConnected)
 
-            Button("Nuancier typographique") {
+            Button("demo.typography") {
                 printer().print(DemoDocuments.typographySampler(), options: options())
             }
             .disabled(!transport.isConnected)
 
-            Button("Degager le papier (\(Int(feedDots)) points)") {
+            Button(String(format: NSLocalizedString("print.clearPaper", comment: ""), Int(feedDots))) {
                 // Le degagement manuel passe par la sequence complete: une
                 // commande d'avance envoyee seule est ignoree par le firmware.
                 printer().print(PrintDocument(), options: options())
@@ -184,39 +189,39 @@ struct ContentView: View {
 
     private var printSettings: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Picker("Largeur", selection: $printerWidth) {
+            Picker("settings.width", selection: $printerWidth) {
                 ForEach(PrinterWidth.allCases) { value in
                     Text(value.title).tag(value)
                 }
             }
-            Picker("Densite", selection: $density) {
+            Picker("settings.density", selection: $density) {
                 ForEach(PrintDensity.allCases) { value in
                     Text(value.title).tag(value)
                 }
             }
-            Picker("Papier", selection: $paperMode) {
+            Picker("settings.paper", selection: $paperMode) {
                 ForEach(PaperMode.allCases) { value in
                     Text(value.title).tag(value)
                 }
             }
-            Picker("Tramage", selection: $ditherMode) {
+            Picker("settings.dither", selection: $ditherMode) {
                 ForEach(DitherMode.allCases) { value in
                     Text(value.title).tag(value)
                 }
             }
-            Toggle("Controle de flux par credits", isOn: $transport.useCreditFlowControl)
+            Toggle("settings.creditFlow", isOn: $transport.useCreditFlowControl)
             VStack(alignment: .leading) {
-                Text("Seuil noir/blanc \(Int(threshold))")
+                Text(String(format: NSLocalizedString("settings.threshold", comment: ""), Int(threshold)))
                 Slider(value: $threshold, in: 64...224, step: 1)
-                Text("Paquet BLE \(transport.maxChunkSize) octets")
+                Text(String(format: NSLocalizedString("settings.packet", comment: ""), transport.maxChunkSize))
                 Slider(value: Binding(
                     get: { Double(transport.maxChunkSize) },
                     set: { transport.maxChunkSize = Int($0) }
                 ), in: 20...500, step: 10)
-                Text("Degagement papier \(Int(feedDots)) points (~\(Int(Double(feedDots) / 8.0)) mm)")
+                Text(String(format: NSLocalizedString("settings.feed", comment: ""), Int(feedDots), Int(Double(feedDots) / 8.0)))
                 Slider(value: $feedDots, in: 0...1200, step: 10)
                 if paperMode == .label {
-                    Text("Longueur d'etiquette \(Int(labelLength))")
+                    Text(String(format: NSLocalizedString("settings.labelLength", comment: ""), Int(labelLength)))
                     Slider(value: $labelLength, in: 8...255, step: 1)
                 }
             }
@@ -226,17 +231,17 @@ struct ContentView: View {
     private var editor: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Ticket de test")
+                Text("editor.title")
                     .font(.title3.weight(.semibold))
-                TextField("Commerce", text: $receipt.merchantName)
-                TextField("Adresse", text: $receipt.address)
-                DatePicker("Date", selection: $receipt.date)
+                TextField("editor.merchant", text: $receipt.merchantName)
+                TextField("editor.address", text: $receipt.address)
+                DatePicker("editor.date", selection: $receipt.date)
 
-                Text("Articles")
+                Text("editor.items")
                     .font(.headline)
                 ForEach($receipt.items) { $item in
                     HStack {
-                        TextField("Article", text: $item.name)
+                        TextField("editor.item", text: $item.name)
                         Stepper("\(item.quantity)", value: $item.quantity, in: 1...99)
                             .frame(width: 80)
                         DecimalField(value: $item.unitPrice)
@@ -244,20 +249,20 @@ struct ContentView: View {
                     }
                 }
                 HStack {
-                    Button("Ajouter") {
-                        receipt.items.append(ReceiptItem(name: "Article", quantity: 1, unitPrice: 1))
+                    Button("editor.add") {
+                        receipt.items.append(ReceiptItem(name: "editor.item", quantity: 1, unitPrice: 1))
                     }
-                    Button("Retirer") {
+                    Button("editor.remove") {
                         if !receipt.items.isEmpty {
                             receipt.items.removeLast()
                         }
                     }
-                    Button("Reinitialiser") {
+                    Button("editor.reset") {
                         receipt = .sample
                     }
                 }
 
-                TextField("Pied de ticket", text: $receipt.footer)
+                TextField("editor.footer", text: $receipt.footer)
             }
             .padding()
         }
@@ -267,10 +272,13 @@ struct ContentView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 14) {
-                    Text("Apercu monochrome \(printerWidth.pixels) px, longueur variable")
+                    Text(String(format: NSLocalizedString("preview.title", comment: ""), printerWidth.pixels))
                         .font(.title3.weight(.semibold))
+                    // Largeur souple: l'apercu se reduit sur un ecran etroit
+                    // au lieu d'imposer 384 px a toute la fenetre.
                     ReceiptPreview(receipt: receipt, width: printerWidth.pixels)
-                        .frame(width: 384, height: 300)
+                        .frame(maxWidth: 384)
+                        .frame(height: 300)
                         .background(Color.white)
                         .border(Color.black.opacity(0.25))
                 }
@@ -278,13 +286,13 @@ struct ContentView: View {
                 .padding()
             }
             Divider()
-            console.frame(height: 230)
+            console.frame(minHeight: 140, maxHeight: 230)
         }
     }
 
     private var console: some View {
         VStack(alignment: .leading) {
-            Text("Console hex RX/TX")
+            Text("console.title")
                 .font(.headline)
             Text(transport.logFileURL.path)
                 .font(.caption2.monospaced())
@@ -344,7 +352,7 @@ struct ContentView: View {
             let bitmap = try renderer().render(receipt)
             transport.send(PrintJobBuilder.segments(bitmap: bitmap, options: options()))
         } catch {
-            transport.recordLocalError("Erreur rendu: \(error.localizedDescription)")
+            transport.recordLocalError(String(format: NSLocalizedString("error.render", comment: ""), error.localizedDescription))
         }
     }
 
@@ -353,7 +361,7 @@ struct ContentView: View {
             let bitmap = try renderer().testPattern()
             transport.send(PrintJobBuilder.segments(bitmap: bitmap, options: options()))
         } catch {
-            transport.recordLocalError("Erreur mire: \(error.localizedDescription)")
+            transport.recordLocalError(String(format: NSLocalizedString("error.pattern", comment: ""), error.localizedDescription))
         }
     }
 }
@@ -404,7 +412,7 @@ private struct DeviceStatusBar: View {
             } else {
                 ProgressView()
                     .controlSize(.small)
-                Text("Batterie...")
+                Text("battery.loading")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -449,7 +457,7 @@ private struct DecimalField: View {
     @Binding var value: Decimal
 
     var body: some View {
-        TextField("Prix", text: Binding(
+        TextField("editor.price", text: Binding(
             get: { "\(value)" },
             set: { value = Decimal(string: $0.replacingOccurrences(of: ",", with: ".")) ?? value }
         ))
