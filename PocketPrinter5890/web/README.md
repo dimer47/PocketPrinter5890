@@ -1,5 +1,7 @@
 # PocketPrinter5890 — TypeScript
 
+*[Version française](README_FR.md) · [Project root](../README.md)*
+
 Drive the Lidl Tronic/SILVERCREST 5890 thermal pocket printer from the
 browser or from Capacitor.
 

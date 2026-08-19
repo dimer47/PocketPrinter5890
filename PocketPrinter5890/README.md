@@ -1,5 +1,7 @@
 # PocketPrinter5890
 
+*[Version française](README_FR.md)*
+
 Drive the thermal pocket printers sold by Lidl under the **Tronic**,
 **SILVERCREST** and **Parkside** brands over Bluetooth Low Energy — without
 the official app, and without any cloud service.

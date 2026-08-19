@@ -1,6 +1,6 @@
 # PocketPrinter5890
 
-*[Version française](README_FR.md)*
+*[Version française](README_FR.md) · [Project root](../README.md)*
 
 Swift library for driving over Bluetooth Low Energy the thermal pocket
 printers sold by Lidl under the **Tronic**, **SILVERCREST** and **Parkside**

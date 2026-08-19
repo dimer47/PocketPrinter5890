@@ -1,6 +1,6 @@
 # PocketPrinter5890
 
-*[English version](README.md)*
+*[English version](README.md) · [Racine du projet](../README_FR.md)*
 
 Librairie Swift pour piloter en Bluetooth Low Energy les mini imprimantes
 thermiques de poche vendues chez Lidl sous les marques **Tronic**,
