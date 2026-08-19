@@ -79,7 +79,8 @@ dependencies: [
 
 Plateformes: **macOS 10.15+**, **iOS 13+**, **iPadOS 13+**. Ces planchers sont
 fixes par `@Published` (Combine), qui n'existe pas avant. iPadOS se compile
-depuis les memes cibles iOS.
+depuis les memes cibles iOS. L'impression a ete verifiee sur macOS et sur
+iPhone physique.
 
 Toute la librairie fonctionne sur les trois plateformes: protocole,
 documents, rendu de ticket, codes-barres, QR codes et transport BLE.
@@ -242,10 +243,10 @@ sans toucher aux reglages du systeme.
 onglets — connexion, ticket, impression, reglages, console — avec les memes
 fonctions adaptees au tactile.
 
-> L'application iOS compile pour appareil et simulateur, mais le simulateur
-> n'a pas de Bluetooth: seul un iPhone ou un iPad reel peut dialoguer avec
-> l'imprimante. L'execution sur materiel demande de choisir une equipe de
-> developpement dans Xcode.
+> Verifiee sur iPhone physique: decouverte, connexion et impression
+> fonctionnent. Le simulateur n'ayant pas de Bluetooth, seul un appareil reel
+> peut dialoguer avec l'imprimante. L'execution sur materiel demande de
+> choisir une equipe de developpement dans Xcode.
 
 ## Structure du depot
 
@@ -277,9 +278,9 @@ swift test
 
 ## Etat de validation
 
-Confirme sur le materiel: impression raster, avance papier, degagement, modes
-papier, texte natif, QR codes et codes-barres, lecture modele / firmware /
-batterie / papier, controle de flux.
+Confirme sur le materiel, sur **macOS et iOS**: impression raster, avance
+papier, degagement, modes papier, texte natif, QR codes et codes-barres,
+lecture modele / firmware / batterie / papier, controle de flux.
 
 Portees depuis le SDK mais **non testees** sur ce firmware, signalees dans le
 code: vitesse d'impression, niveau de chauffe, horloge interne, marques de

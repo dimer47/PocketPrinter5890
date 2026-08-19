@@ -78,7 +78,8 @@ dependencies: [
 
 Platforms: **macOS 10.15+**, **iOS 13+**, **iPadOS 13+**. Those floors are set
 by `@Published` (Combine), which does not exist before. iPadOS builds from the
-same iOS targets.
+same iOS targets. Printing has been verified on macOS and on a physical
+iPhone.
 
 The whole library works on all three platforms: protocol, documents,
 receipt rendering, barcodes, QR codes and BLE transport. `ReceiptRenderer`
@@ -239,9 +240,10 @@ verifiable without touching system settings.
 tabs — connection, receipt, printing, settings, console — with the same
 feature set adapted to touch.
 
-> The iOS app compiles for device and simulator, but the simulator has no
-> Bluetooth: only a real iPhone or iPad can talk to the printer. Running it
-> on hardware requires selecting a development team in Xcode.
+> Verified on a physical iPhone: discovery, connection and printing all work.
+> Note that the simulator has no Bluetooth, so only a real device can talk to
+> the printer. Running it on hardware requires selecting a development team in
+> Xcode.
 
 ## Repository layout
 
@@ -273,9 +275,9 @@ swift test
 
 ## Validation status
 
-Confirmed on hardware: raster printing, paper feed, clearance, paper modes,
-native text, QR codes and barcodes, reading model / firmware / battery /
-paper, flow control.
+Confirmed on hardware, on **macOS and iOS**: raster printing, paper feed,
+clearance, paper modes, native text, QR codes and barcodes, reading model /
+firmware / battery / paper, flow control.
 
 Ported from the SDK but **untested** on this firmware, flagged in the code:
 print speed, heating level, internal clock, cut marks, printer mode, factory

@@ -56,7 +56,7 @@ differs.
 
 | Platform | Channel |
 |---|---|
-| macOS, iOS, iPadOS | CoreBluetooth. See the Swift implementation in this repository. |
+| macOS, iOS, iPadOS | CoreBluetooth. See the Swift implementation in this repository, verified on both macOS and a physical iPhone. |
 | Chrome, Edge, Opera | Web Bluetooth. Requires a user gesture to open the device chooser: no silent reconnection. |
 | Firefox, Safari | **Web Bluetooth unavailable.** Both vendors declined to implement it. Use a native wrapper. |
 | iOS/Android from web code | Capacitor with a native BLE plugin. |
