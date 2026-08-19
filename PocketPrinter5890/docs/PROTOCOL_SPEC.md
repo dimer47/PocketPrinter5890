@@ -114,6 +114,13 @@ Two consequences that are easy to get wrong:
 Packet size: the vendor app negotiates an MTU up to 512 bytes. 180 bytes
 works reliably. 20 bytes (the BLE minimum) works but is very slow.
 
+**Reset the credit count on every connection.** Credits belong to one
+session: carrying a stale count across a reconnection makes the printer look
+like it still owes packets, and the next job stalls waiting for credit that
+never arrives. Watch for the disconnection event too — switching the printer
+off does not surface as an error on the write path, so an implementation that
+ignores it will happily queue bytes into the void.
+
 ---
 
 ## 3. Mandatory activation sequence
@@ -434,6 +441,8 @@ Problems that look like hardware faults but are not.
 | End of receipt stuck under the lid | No clearance feed (section 4.3) |
 | Asymmetric side margins | Mechanical, not correctable (section 5.2) |
 | Battery reads 1% | `01 01` credit frame mistaken for the reply (section 2) |
+| Worked once, then everything stalls | Stale credits kept across a reconnection (section 2) |
+| Still "connected" after switching the printer off | Disconnection event not handled (section 2) |
 
 ---
 

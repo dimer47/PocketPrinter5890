@@ -28,6 +28,7 @@ export interface PrinterDevice {
 }
 
 export type NotificationHandler = (bytes: Uint8Array) => void;
+export type DisconnectHandler = () => void;
 
 /** Byte channel to the printer. */
 export interface Transport {
@@ -44,4 +45,13 @@ export interface Transport {
 
   /** Registers a handler for incoming notifications. */
   onNotification(handler: NotificationHandler): void;
+
+  /**
+   * Registers a handler for unexpected disconnection.
+   *
+   * The printer going out of range or being switched off does not surface as
+   * an error on the write path: without this the caller keeps believing it is
+   * connected and queues bytes into the void.
+   */
+  onDisconnect(handler: DisconnectHandler): void;
 }

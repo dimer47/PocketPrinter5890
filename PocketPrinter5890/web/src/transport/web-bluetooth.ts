@@ -10,6 +10,7 @@
  */
 
 import {
+  type DisconnectHandler,
   type NotificationHandler,
   type PrinterDevice,
   type Transport,
@@ -23,6 +24,7 @@ export class WebBluetoothTransport implements Transport {
   private device?: BluetoothDevice;
   private writeCharacteristic?: BluetoothRemoteGATTCharacteristic;
   private handlers: NotificationHandler[] = [];
+  private disconnectHandlers: DisconnectHandler[] = [];
 
   maxChunkSize = 180;
 
@@ -53,6 +55,13 @@ export class WebBluetoothTransport implements Transport {
         { namePrefix: 'PT-' },
       ],
       optionalServices: [SERVICE_UUID],
+    });
+
+    // Switching the printer off or walking out of range does not fail the
+    // write path: without this event the caller never learns it is gone.
+    this.device.addEventListener('gattserverdisconnected', () => {
+      this.writeCharacteristic = undefined;
+      this.disconnectHandlers.forEach((handler) => handler());
     });
 
     const server = await this.device.gatt?.connect();
@@ -98,5 +107,9 @@ export class WebBluetoothTransport implements Transport {
 
   onNotification(handler: NotificationHandler): void {
     this.handlers.push(handler);
+  }
+
+  onDisconnect(handler: DisconnectHandler): void {
+    this.disconnectHandlers.push(handler);
   }
 }

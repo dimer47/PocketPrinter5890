@@ -187,6 +187,13 @@ const printer = new PocketPrinter(new WebBluetoothTransport(), {}, {
     if (info.model) $('model').textContent = info.model;
     if (info.firmware) $('firmware').textContent = info.firmware;
   },
+  onDisconnect: () => {
+    // Switching the printer off used to leave the page believing it was
+    // still connected, and the next job stalled on stale credits.
+    $('status').textContent = 'Printer disconnected';
+    setConnected(false);
+    log('err', 'Printer disconnected');
+  },
 });
 
 const setConnected = (connected) => {

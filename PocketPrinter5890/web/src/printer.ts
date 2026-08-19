@@ -29,6 +29,8 @@ export interface PrinterEvents {
   onInfo?: (info: PrinterInfo) => void;
   /** Job progress, 0 to 1. */
   onProgress?: (fraction: number) => void;
+  /** The printer went away: switched off, out of range, or disconnected. */
+  onDisconnect?: () => void;
 }
 
 export class PocketPrinter {
@@ -44,6 +46,7 @@ export class PocketPrinter {
   ) {
     this.options = { ...defaultOptions, ...options };
     this.transport.onNotification((bytes) => this.handleNotification(bytes));
+    this.transport.onDisconnect(() => this.handleDisconnect());
   }
 
   get isConnected(): boolean {
@@ -68,7 +71,23 @@ export class PocketPrinter {
 
   async disconnect(): Promise<void> {
     await this.transport.disconnect();
+    this.handleDisconnect();
+  }
+
+  /**
+   * Clears every piece of session state.
+   *
+   * Credits and device information belong to one connection: carrying them
+   * across makes a reconnected printer look like it still owes packets, and
+   * the next job stalls waiting for credit that will never come.
+   */
+  private handleDisconnect(): void {
     this.flow.reset();
+    delete this.info.model;
+    delete this.info.firmware;
+    delete this.info.battery;
+    delete this.info.status;
+    this.events.onDisconnect?.();
   }
 
   // --- Printing

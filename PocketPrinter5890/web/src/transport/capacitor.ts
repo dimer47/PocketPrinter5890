@@ -15,6 +15,7 @@
  */
 
 import {
+  type DisconnectHandler,
   type NotificationHandler,
   type PrinterDevice,
   type Transport,
@@ -47,6 +48,7 @@ export interface BleClientLike {
 export class CapacitorTransport implements Transport {
   private deviceId?: string;
   private handlers: NotificationHandler[] = [];
+  private disconnectHandlers: DisconnectHandler[] = [];
 
   maxChunkSize = 180;
 
@@ -66,6 +68,7 @@ export class CapacitorTransport implements Transport {
 
     await this.ble.connect(device.deviceId, () => {
       this.deviceId = undefined;
+      this.disconnectHandlers.forEach((handler) => handler());
     });
     this.deviceId = device.deviceId;
 
@@ -96,5 +99,9 @@ export class CapacitorTransport implements Transport {
 
   onNotification(handler: NotificationHandler): void {
     this.handlers.push(handler);
+  }
+
+  onDisconnect(handler: DisconnectHandler): void {
+    this.disconnectHandlers.push(handler);
   }
 }
