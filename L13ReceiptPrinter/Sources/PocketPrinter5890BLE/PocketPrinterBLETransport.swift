@@ -1,6 +1,6 @@
 import CoreBluetooth
 import Foundation
-import L13Core
+import PocketPrinter5890Kit
 
 public struct PrinterDevice: Identifiable, Equatable {
     public let id: UUID
@@ -58,7 +58,7 @@ public struct HexLogEntry: Identifiable, Equatable {
 }
 
 @MainActor
-public final class L13BLETransport: NSObject, ObservableObject {
+public final class PocketPrinter5890BLE: NSObject, ObservableObject {
     public let logFileURL: URL
     private var central: CBCentralManager?
     private var discoveredPeripherals: [UUID: CBPeripheral] = [:]
@@ -97,7 +97,7 @@ public final class L13BLETransport: NSObject, ObservableObject {
     @Published public var useCreditFlowControl = true
     @Published public var showOnlyLikelyPrinters = true
     @Published public var preferWriteWithResponse = false
-    @Published public var preferredProfileID = L13BLEProfiles.automaticID
+    @Published public var preferredProfileID = PrinterBLEProfiles.automaticID
     /// Progression du travail en cours, de 0 a 1. Vaut 1 quand la file est vide.
     @Published public private(set) var sendProgress: Double = 1
     /// Niveau de batterie en pourcentage, nil tant qu'il n'a pas ete lu.
@@ -262,10 +262,10 @@ public final class L13BLETransport: NSObject, ObservableObject {
     }
 
     public func readDeviceInformation() {
-        send(L13Command.model, label: "Lire modele")
-        send(L13Command.firmware, label: "Lire firmware")
-        send(L13Command.battery, label: "Lire batterie")
-        send(L13Command.paperStatus, label: "Lire papier")
+        send(PrinterCommand.model, label: "Lire modele")
+        send(PrinterCommand.firmware, label: "Lire firmware")
+        send(PrinterCommand.battery, label: "Lire batterie")
+        send(PrinterCommand.paperStatus, label: "Lire papier")
     }
 
     public func recordLocalError(_ message: String) {
@@ -365,7 +365,7 @@ public final class L13BLETransport: NSObject, ObservableObject {
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library")
         return base
             .appendingPathComponent("Logs", isDirectory: true)
-            .appendingPathComponent("L13ReceiptPrinter", isDirectory: true)
+            .appendingPathComponent("PocketPrinter5890App", isDirectory: true)
             .appendingPathComponent("ble.log")
     }
 
@@ -380,15 +380,19 @@ public final class L13BLETransport: NSObject, ObservableObject {
     private func appendLog(_ entry: HexLogEntry) {
         log.append(entry)
         guard let data = (entry.line + "\n").data(using: .utf8) else { return }
+        // `seekToEnd()` et `write(contentsOf:)` exigent iOS 13.4; leurs
+        // equivalents historiques fonctionnent depuis les toutes premieres
+        // versions et gardent la librairie compatible avec les vieux
+        // appareils.
         if let handle = try? FileHandle(forWritingTo: logFileURL) {
-            defer { try? handle.close() }
-            _ = try? handle.seekToEnd()
-            _ = try? handle.write(contentsOf: data)
+            defer { handle.closeFile() }
+            handle.seekToEndOfFile()
+            handle.write(data)
         }
     }
 }
 
-extension L13BLETransport: CBCentralManagerDelegate {
+extension PocketPrinter5890BLE: CBCentralManagerDelegate {
     public nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
         Task { @MainActor in
             switch central.state {
@@ -408,7 +412,7 @@ extension L13BLETransport: CBCentralManagerDelegate {
                 ?? "BLE \(peripheral.identifier.uuidString.prefix(8))"
             let advertisedServices = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
             let lowercasedName = name.lowercased()
-            let hasKnownService = advertisedServices.contains { L13BLEProfiles.allServiceUUIDs.contains($0) }
+            let hasKnownService = advertisedServices.contains { PrinterBLEProfiles.allServiceUUIDs.contains($0) }
             let hasPrinterName = lowercasedName.contains("printer")
                 || lowercasedName.contains("pocket")
                 || lowercasedName.contains("l13")
@@ -450,7 +454,7 @@ extension L13BLETransport: CBCentralManagerDelegate {
     }
 }
 
-extension L13BLETransport: CBPeripheralDelegate {
+extension PocketPrinter5890BLE: CBPeripheralDelegate {
     public nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         Task { @MainActor in
             guard error == nil else {
@@ -458,7 +462,7 @@ extension L13BLETransport: CBPeripheralDelegate {
                 return
             }
             let services = peripheral.services ?? []
-            let profileOrder = L13BLEProfiles.orderedProfiles(preferredProfileID: preferredProfileID)
+            let profileOrder = PrinterBLEProfiles.orderedProfiles(preferredProfileID: preferredProfileID)
             guard let profile = profileOrder.first(where: { wanted in
                 services.contains { $0.uuid == wanted.service }
             }) else {
@@ -537,11 +541,11 @@ extension L13BLETransport: CBPeripheralDelegate {
             }
 
             let contextIndex = pendingResponseContexts.firstIndex {
-                L13ResponseDecoder.looksLikeSolicitedResponse(bytes, context: $0)
+                ResponseDecoder.looksLikeSolicitedResponse(bytes, context: $0)
             }
             let context = contextIndex.map { pendingResponseContexts[$0] }
             updatePrinterState(with: bytes, context: context)
-            let decoded = L13ResponseDecoder.decode(bytes, context: context)
+            let decoded = ResponseDecoder.decode(bytes, context: context)
             if let contextIndex {
                 let resolvedContext = pendingResponseContexts.remove(at: contextIndex)
                 pendingResponseIDs[resolvedContext] = nil
@@ -569,7 +573,7 @@ extension L13BLETransport: CBPeripheralDelegate {
     }
 }
 
-private extension L13BLETransport {
+private extension PocketPrinter5890BLE {
     func appendNotifyUUID(_ uuid: CBUUID) {
         let value = uuid.uuidString
         if selectedNotify == "-" {
@@ -581,11 +585,11 @@ private extension L13BLETransport {
 
     func rememberResponseContextIfNeeded(label: String, bytes: [UInt8]) {
         switch bytes {
-        case L13Command.model,
-            L13Command.firmware,
-            L13Command.serialNumber,
-            L13Command.battery,
-            L13Command.paperStatus:
+        case PrinterCommand.model,
+            PrinterCommand.firmware,
+            PrinterCommand.serialNumber,
+            PrinterCommand.battery,
+            PrinterCommand.paperStatus:
             pendingResponseContexts.append(label)
             scheduleResponseTimeout(for: label)
         default:
@@ -618,4 +622,4 @@ private extension L13BLETransport {
     }
 }
 
-extension L13BLETransport: PrinterTransport {}
+extension PocketPrinter5890BLE: PrinterTransport {}

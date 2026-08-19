@@ -1,6 +1,6 @@
 import Foundation
 
-public enum L13ResponseDecoder {
+public enum ResponseDecoder {
     public static func decode(_ bytes: [UInt8], context: String?) -> String {
         let context = context?.lowercased() ?? ""
 

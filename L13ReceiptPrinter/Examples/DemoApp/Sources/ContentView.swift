@@ -1,11 +1,11 @@
-import L13BLETransport
-import L13Core
+import PocketPrinter5890BLE
+import PocketPrinter5890Kit
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var transport = L13BLETransport()
+    @StateObject private var transport = PocketPrinter5890BLE()
     @State private var receipt = Receipt.sample
-    @State private var density: L13Density = .medium
+    @State private var density: PrintDensity = .medium
     @State private var printerWidth: PrinterWidth = .mm58
     @State private var paperMode: PaperMode = .continuous
     @State private var threshold = 128.0
@@ -68,8 +68,8 @@ struct ContentView: View {
             }
             Toggle("Afficher seulement les imprimantes probables", isOn: $transport.showOnlyLikelyPrinters)
             Picker("Canal BLE", selection: $transport.preferredProfileID) {
-                Text("Automatique (FF00 d'abord)").tag(L13BLEProfiles.automaticID)
-                ForEach(L13BLEProfiles.preferred) { profile in
+                Text("Automatique (FF00 d'abord)").tag(PrinterBLEProfiles.automaticID)
+                ForEach(PrinterBLEProfiles.preferred) { profile in
                     Text(profile.id).tag(profile.id)
                 }
             }
@@ -113,7 +113,7 @@ struct ContentView: View {
             .disabled(!transport.isConnected)
 
             Button("Verifier papier seulement") {
-                transport.send(L13Command.paperStatus, label: "Verifier papier")
+                transport.send(PrinterCommand.paperStatus, label: "Verifier papier")
             }
             .disabled(!transport.isConnected)
 
@@ -190,7 +190,7 @@ struct ContentView: View {
                 }
             }
             Picker("Densite", selection: $density) {
-                ForEach(L13Density.allCases) { value in
+                ForEach(PrintDensity.allCases) { value in
                     Text(value.title).tag(value)
                 }
             }

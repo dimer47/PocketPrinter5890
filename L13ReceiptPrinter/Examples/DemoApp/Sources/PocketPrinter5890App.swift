@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct L13ReceiptPrinterApp: App {
+struct PocketPrinter5890App: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

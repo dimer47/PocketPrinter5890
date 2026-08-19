@@ -1,6 +1,6 @@
 import Foundation
 
-public enum L13Density: UInt8, CaseIterable, Identifiable {
+public enum PrintDensity: UInt8, CaseIterable, Identifiable {
     case light = 0
     case medium = 1
     case strong = 2
@@ -16,7 +16,7 @@ public enum L13Density: UInt8, CaseIterable, Identifiable {
     }
 }
 
-public enum L13FormFeed: Equatable {
+public enum FormFeedMode: Equatable {
     case documentedPocketPrinter
     case standard
 
@@ -39,7 +39,7 @@ public enum L13FormFeed: Equatable {
     }
 }
 
-public enum L13Command {
+public enum PrinterCommand {
     public static let model: [UInt8] = [0x10, 0xff, 0x20, 0xf0]
     public static let firmware: [UInt8] = [0x10, 0xff, 0x20, 0xf1]
     public static let serialNumber: [UInt8] = [0x10, 0xff, 0x20, 0xf2]
@@ -49,7 +49,7 @@ public enum L13Command {
     public static let experimentalPrePrintF130: [UInt8] = [0x10, 0xff, 0xf1, 0x30] + Array(repeating: 0x00, count: 12)
     public static let experimentalPostPrint: [UInt8] = [0x10, 0xff, 0xf1, 0x45]
 
-    public static func setDensity(_ density: L13Density) -> [UInt8] {
+    public static func setDensity(_ density: PrintDensity) -> [UInt8] {
         [0x10, 0xff, 0x10, 0x00, density.rawValue]
     }
 

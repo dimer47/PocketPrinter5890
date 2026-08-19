@@ -31,7 +31,7 @@ public enum PaperMode: String, CaseIterable, Identifiable, Sendable {
 public struct PrintOptions: Equatable {
     /// Largeur d'impression. 384 px pour la machine de l'utilisateur.
     public var width: PrinterWidth
-    public var density: L13Density
+    public var density: PrintDensity
     /// Nombre de lignes par bande raster. Le firmware perd des donnees si on
     /// envoie le raster complet en une seule commande.
     public var bandHeight: Int
@@ -73,11 +73,11 @@ public struct PrintOptions: Equatable {
     public var includeExperimentalPostPrint: Bool
     /// Emet un form feed en fin de travail. Inutile sur papier continu.
     public var includeFormFeed: Bool
-    public var formFeed: L13FormFeed
+    public var formFeed: FormFeedMode
 
     public init(
         width: PrinterWidth = .mm58,
-        density: L13Density = .medium,
+        density: PrintDensity = .medium,
         bandHeight: Int = RasterEncoder.defaultBandHeight,
         trailingFeedDots: Int = 80,
         sendInitialize: Bool = true,
@@ -90,7 +90,7 @@ public struct PrintOptions: Equatable {
         experimentalPrePrintUsesF130: Bool = false,
         includeExperimentalPostPrint: Bool = false,
         includeFormFeed: Bool = false,
-        formFeed: L13FormFeed = .standard
+        formFeed: FormFeedMode = .standard
     ) {
         self.width = width
         self.density = density
@@ -154,14 +154,14 @@ public enum PrintJobBuilder {
     private static func prologue(options: PrintOptions) -> [PrintSegment] {
         var result: [PrintSegment] = []
         if options.checkPaper {
-            result.append(PrintSegment(name: "Verifier papier", bytes: L13Command.paperStatus))
+            result.append(PrintSegment(name: "Verifier papier", bytes: PrinterCommand.paperStatus))
         }
         if options.useLuckSequence {
             result.append(PrintSegment(
                 name: "Activation moteur",
-                bytes: L13Command.Luck.enablePrinter()
+                bytes: PrinterCommand.Luck.enablePrinter()
             ))
-            result.append(PrintSegment(name: "Reveil", bytes: L13Command.Luck.wakeup))
+            result.append(PrintSegment(name: "Reveil", bytes: PrinterCommand.Luck.wakeup))
             // `1F 80` declare une etiquette de longueur fixe: l'imprimante
             // deroule alors jusqu'a la fin de l'etiquette declaree. En papier
             // continu, l'application officielle ne l'envoie pas du tout
@@ -169,7 +169,7 @@ public enum PrintJobBuilder {
             if options.paperMode == .label {
                 result.append(PrintSegment(
                     name: "Longueur d'etiquette",
-                    bytes: L13Command.Luck.setPaperType(length: options.labelLength)
+                    bytes: PrinterCommand.Luck.setPaperType(length: options.labelLength)
                 ))
             }
         }
@@ -186,12 +186,12 @@ public enum PrintJobBuilder {
         }
         result.append(PrintSegment(
             name: "Densite \(options.density.title)",
-            bytes: L13Command.setDensity(options.density)
+            bytes: PrinterCommand.setDensity(options.density)
         ))
         if options.includeExperimentalPrePrint {
             let bytes = options.experimentalPrePrintUsesF130
-                ? L13Command.experimentalPrePrintF130
-                : L13Command.experimentalPrePrintF103
+                ? PrinterCommand.experimentalPrePrintF130
+                : PrinterCommand.experimentalPrePrintF103
             result.append(PrintSegment(name: "Pre-impression experimentale", bytes: bytes))
         }
         return result
@@ -215,17 +215,17 @@ public enum PrintJobBuilder {
             // `1D 0C` cale l'etiquette suivante; sur papier continu il ne fait
             // que gaspiller du papier.
             if options.paperMode == .label {
-                result.append(PrintSegment(name: "Calage etiquette", bytes: L13Command.Luck.position))
+                result.append(PrintSegment(name: "Calage etiquette", bytes: PrinterCommand.Luck.position))
             }
             result.append(PrintSegment(
                 name: "Fin du travail",
-                bytes: L13Command.Luck.stopPrintJob
+                bytes: PrinterCommand.Luck.stopPrintJob
             ))
         }
         if options.includeExperimentalPostPrint {
             result.append(PrintSegment(
                 name: "Fin experimentale",
-                bytes: L13Command.experimentalPostPrint
+                bytes: PrinterCommand.experimentalPostPrint
             ))
         }
         return result

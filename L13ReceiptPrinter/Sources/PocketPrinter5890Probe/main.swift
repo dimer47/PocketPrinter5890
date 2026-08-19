@@ -1,10 +1,10 @@
 import CoreBluetooth
 import Foundation
-import L13BLETransport
-import L13Core
+import PocketPrinter5890BLE
+import PocketPrinter5890Kit
 
 @main
-final class L13BLEProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+final class PocketPrinter5890Probe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var central: CBCentralManager!
     private var target: CBPeripheral?
     private var profile: BLEUARTProfile?
@@ -31,12 +31,12 @@ final class L13BLEProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
     }()
 
     static func main() {
-        let probe = L13BLEProbe()
+        let probe = PocketPrinter5890Probe()
         probe.run()
     }
 
     private func run() {
-        print("L13BLEProbe: scan BLE, cible Mini Pocket Printer / L13 / services UART connus")
+        print("PocketPrinter5890Probe: scan BLE, cible Mini Pocket Printer / L13 / services UART connus")
         print("Option: ajouter --feed pour envoyer une avance papier 1B 4A 28 apres connexion")
         print("Option: ajouter --print-test pour envoyer une petite mire raster 96 x 48")
         print("Option: ajouter --profile=transparent|ff00|18f0|e781 pour forcer un UART BLE")
@@ -71,7 +71,7 @@ final class L13BLEProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
         let likelyName = name.lowercased().contains("printer")
             || name.lowercased().contains("pocket")
             || name.lowercased().contains("l13")
-        let likelyService = advertised.contains { L13BLEProfiles.allServiceUUIDs.contains($0) }
+        let likelyService = advertised.contains { PrinterBLEProfiles.allServiceUUIDs.contains($0) }
         guard likelyName || likelyService else { return }
 
         print("Trouve: \(name)  uuid=\(peripheral.identifier.uuidString)  rssi=\(RSSI)")
@@ -156,10 +156,10 @@ final class L13BLEProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
     }
 
     private func beginCommands() {
-        enqueue(L13Command.model, "modele")
-        enqueue(L13Command.firmware, "firmware")
-        enqueue(L13Command.battery, "batterie")
-        enqueue(L13Command.paperStatus, "papier")
+        enqueue(PrinterCommand.model, "modele")
+        enqueue(PrinterCommand.firmware, "firmware")
+        enqueue(PrinterCommand.battery, "batterie")
+        enqueue(PrinterCommand.paperStatus, "papier")
         if shouldFeedBig {
             // Sequence exacte extraite de l'application officielle
             // (LuckPrinter SDK, classe DP_D1.printTagOnce dont herite
@@ -173,7 +173,7 @@ final class L13BLEProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
             enqueue([0x10, 0xff, 0xf1, 0x45], "stopPrintJob 10 FF F1 45")
         }
         if shouldFeed {
-            enqueue(L13Command.feedDots(0x28), "avance papier")
+            enqueue(PrinterCommand.feedDots(0x28), "avance papier")
         }
         if shouldProbeCodePages {
             let segments = PrintJobBuilder.segments(
@@ -270,22 +270,22 @@ final class L13BLEProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
     }
 
     private func orderedProfiles() -> [BLEUARTProfile] {
-        guard let selectedProfileName else { return L13BLEProfiles.preferred }
+        guard let selectedProfileName else { return PrinterBLEProfiles.preferred }
         let forced: BLEUARTProfile?
         switch selectedProfileName {
         case "transparent", "microchip", "49535343":
-            forced = L13BLEProfiles.transparentUART
+            forced = PrinterBLEProfiles.transparentUART
         case "ff00":
-            forced = L13BLEProfiles.ff00
+            forced = PrinterBLEProfiles.ff00
         case "18f0":
-            forced = L13BLEProfiles.service18F0
+            forced = PrinterBLEProfiles.service18F0
         case "e781":
-            forced = L13BLEProfiles.combinedE781
+            forced = PrinterBLEProfiles.combinedE781
         default:
             forced = nil
         }
-        guard let forced else { return L13BLEProfiles.preferred }
-        return [forced] + L13BLEProfiles.preferred.filter { $0.id != forced.id }
+        guard let forced else { return PrinterBLEProfiles.preferred }
+        return [forced] + PrinterBLEProfiles.preferred.filter { $0.id != forced.id }
     }
 
     private func properties(_ properties: CBCharacteristicProperties) -> String {

@@ -19,7 +19,7 @@ public struct BLEUARTProfile: Equatable, Identifiable {
     }
 }
 
-public enum L13BLEProfiles {
+public enum PrinterBLEProfiles {
     public static let automaticID = "Automatique"
 
     public static let transparentUART = BLEUARTProfile(

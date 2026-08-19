@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A10000000000000000000070"
-               BuildableName = "L13ReceiptPrinterApp.app"
-               BlueprintName = "L13ReceiptPrinterApp"
-               ReferencedContainer = "container:L13ReceiptPrinterApp.xcodeproj">
+               BuildableName = "PocketPrinter5890App.app"
+               BlueprintName = "PocketPrinter5890App"
+               ReferencedContainer = "container:PocketPrinter5890App.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,9 +46,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000000000000000000070"
-            BuildableName = "L13ReceiptPrinterApp.app"
-            BlueprintName = "L13ReceiptPrinterApp"
-            ReferencedContainer = "container:L13ReceiptPrinterApp.xcodeproj">
+            BuildableName = "PocketPrinter5890App.app"
+            BlueprintName = "PocketPrinter5890App"
+            ReferencedContainer = "container:PocketPrinter5890App.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -63,9 +63,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000000000000000000070"
-            BuildableName = "L13ReceiptPrinterApp.app"
-            BlueprintName = "L13ReceiptPrinterApp"
-            ReferencedContainer = "container:L13ReceiptPrinterApp.xcodeproj">
+            BuildableName = "PocketPrinter5890App.app"
+            BlueprintName = "PocketPrinter5890App"
+            ReferencedContainer = "container:PocketPrinter5890App.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

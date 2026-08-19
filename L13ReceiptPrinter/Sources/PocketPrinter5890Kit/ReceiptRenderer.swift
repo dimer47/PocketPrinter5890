@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 import AppKit
 import Foundation
 
@@ -324,3 +325,4 @@ public struct ReceiptRenderer {
         return formatter.string(from: value as NSDecimalNumber) ?? "\(value)"
     }
 }
+#endif

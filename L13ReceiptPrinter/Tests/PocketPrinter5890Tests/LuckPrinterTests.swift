@@ -1,4 +1,4 @@
-import L13Core
+import PocketPrinter5890Kit
 import XCTest
 
 /// Verifie que le portage Swift reproduit fidelement les octets du SDK Java.
@@ -214,31 +214,31 @@ final class BatteryDecodingTests: XCTestCase {
 
     func testBatteryFrameDecoding() {
         // Trames reellement observees sur cette machine.
-        XCTAssertEqual(L13ResponseDecoder.decode([0x02, 0x64, 0x00], context: nil), "Batterie probable: 100%")
-        XCTAssertTrue(L13ResponseDecoder.decode([0x02, 0x62, 0x00], context: nil).contains("98"))
+        XCTAssertEqual(ResponseDecoder.decode([0x02, 0x64, 0x00], context: nil), "Batterie probable: 100%")
+        XCTAssertTrue(ResponseDecoder.decode([0x02, 0x62, 0x00], context: nil).contains("98"))
     }
 
     /// Trame reellement observee en reponse a `10 FF 50 F1`: `00 62`.
     /// Le premier octet vaut 0x00, pas 0x02 comme l'emission spontanee.
     func testBatteryReplyFormFromRealLog() {
         XCTAssertTrue(
-            L13ResponseDecoder.looksLikeSolicitedResponse([0x00, 0x62], context: "Lire batterie")
+            ResponseDecoder.looksLikeSolicitedResponse([0x00, 0x62], context: "Lire batterie")
         )
         XCTAssertEqual(
-            L13ResponseDecoder.decode([0x00, 0x62], context: "Lire batterie"),
+            ResponseDecoder.decode([0x00, 0x62], context: "Lire batterie"),
             "Batterie: 98%"
         )
         // L'autre forme, emise spontanement, doit rester reconnue.
         XCTAssertTrue(
-            L13ResponseDecoder.looksLikeSolicitedResponse([0x02, 0x64, 0x00], context: "Lire batterie")
+            ResponseDecoder.looksLikeSolicitedResponse([0x02, 0x64, 0x00], context: "Lire batterie")
         )
     }
 
     /// Une trame batterie fait 3 octets et commence par 0x02: elle ne doit
     /// pas etre confondue avec un credit de flux `01 nn`.
     func testBatteryIsNotConfusedWithCredit() {
-        let credit = L13ResponseDecoder.decode([0x01, 0x64], context: nil)
-        let battery = L13ResponseDecoder.decode([0x02, 0x64, 0x00], context: nil)
+        let credit = ResponseDecoder.decode([0x01, 0x64], context: nil)
+        let battery = ResponseDecoder.decode([0x02, 0x64, 0x00], context: nil)
         XCTAssertTrue(credit.contains("Credit"))
         XCTAssertTrue(battery.contains("Batterie"))
     }
@@ -329,11 +329,11 @@ final class CreditFrameIsolationTests: XCTestCase {
     func testCreditFrameIsNeverASolicitedResponse() {
         for context in ["Lire batterie", "Lire papier", "Lire modele", "Lire firmware"] {
             XCTAssertFalse(
-                L13ResponseDecoder.looksLikeSolicitedResponse([0x01, 0x01], context: context),
+                ResponseDecoder.looksLikeSolicitedResponse([0x01, 0x01], context: context),
                 "Un credit ne doit pas consommer le contexte \(context)"
             )
             XCTAssertFalse(
-                L13ResponseDecoder.looksLikeSolicitedResponse([0x01, 0x04], context: context)
+                ResponseDecoder.looksLikeSolicitedResponse([0x01, 0x04], context: context)
             )
         }
     }
@@ -341,17 +341,17 @@ final class CreditFrameIsolationTests: XCTestCase {
     /// La vraie reponse batterie, elle, doit bien etre reconnue.
     func testRealBatteryReplyIsStillRecognised() {
         XCTAssertTrue(
-            L13ResponseDecoder.looksLikeSolicitedResponse([0x00, 0x62], context: "Lire batterie")
+            ResponseDecoder.looksLikeSolicitedResponse([0x00, 0x62], context: "Lire batterie")
         )
         XCTAssertEqual(
-            L13ResponseDecoder.decode([0x00, 0x62], context: "Lire batterie"),
+            ResponseDecoder.decode([0x00, 0x62], context: "Lire batterie"),
             "Batterie: 98%"
         )
     }
 
     /// Un credit reste decode comme tel dans la console.
     func testCreditStillDecodedForDisplay() {
-        XCTAssertTrue(L13ResponseDecoder.decode([0x01, 0x01], context: nil).contains("Credit"))
+        XCTAssertTrue(ResponseDecoder.decode([0x01, 0x01], context: nil).contains("Credit"))
     }
 }
 

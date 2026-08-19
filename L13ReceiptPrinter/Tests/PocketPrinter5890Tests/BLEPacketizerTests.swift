@@ -1,4 +1,4 @@
-import L13BLETransport
+import PocketPrinter5890BLE
 import XCTest
 
 final class BLEPacketizerTests: XCTestCase {

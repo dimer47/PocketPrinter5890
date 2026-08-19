@@ -75,7 +75,7 @@ public final class PocketPrinter {
 
     // MARK: - Reglages
 
-    public func setDensity(_ density: L13Density) {
+    public func setDensity(_ density: PrintDensity) {
         options.density = density
         transport?.send(LuckPrinter.setDensity(density.rawValue), label: "Densite \(density.title)")
     }

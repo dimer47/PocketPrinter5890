@@ -3,41 +3,42 @@
 import PackageDescription
 
 let package = Package(
-    name: "L13ReceiptPrinter",
+    name: "PocketPrinter5890",
+    // Planchers determines empiriquement: `@Published` (Combine) n'existe
+    // pas avant iOS 13 / macOS 10.15, ce qui fixe la limite basse.
     platforms: [
-        .macOS(.v13)
+        .macOS(.v10_15),
+        .iOS(.v13)
     ],
     products: [
-        .library(name: "L13Core", targets: ["L13Core"]),
-        .library(name: "L13BLETransport", targets: ["L13BLETransport"]),
-        .executable(name: "L13ReceiptPrinter", targets: ["L13ReceiptPrinter"]),
-        .executable(name: "L13BLEProbe", targets: ["L13BLEProbe"])
+        // Coeur de la librairie: protocole, rendu, documents.
+        // Aucune dependance a CoreBluetooth: utilisable avec n'importe quel
+        // transport (BLE, USB, Bluetooth Classic, fichier).
+        .library(name: "PocketPrinter5890Kit", targets: ["PocketPrinter5890Kit"]),
+        // Transport CoreBluetooth pret a l'emploi.
+        .library(name: "PocketPrinter5890BLE", targets: ["PocketPrinter5890BLE"]),
+        // Outil console de diagnostic.
+        .executable(name: "PocketPrinter5890Probe", targets: ["PocketPrinter5890Probe"])
     ],
     targets: [
         .target(
-            name: "L13Core",
-            path: "Sources/L13Core"
+            name: "PocketPrinter5890Kit",
+            path: "Sources/PocketPrinter5890Kit"
         ),
         .target(
-            name: "L13BLETransport",
-            dependencies: ["L13Core"],
-            path: "Sources/L13BLETransport"
+            name: "PocketPrinter5890BLE",
+            dependencies: ["PocketPrinter5890Kit"],
+            path: "Sources/PocketPrinter5890BLE"
         ),
         .executableTarget(
-            name: "L13ReceiptPrinter",
-            dependencies: ["L13Core", "L13BLETransport"],
-            path: "Sources/L13ReceiptPrinter",
-            resources: [.copy("BluetoothInfoTemplate.plist")]
-        ),
-        .executableTarget(
-            name: "L13BLEProbe",
-            dependencies: ["L13Core", "L13BLETransport"],
-            path: "Sources/L13BLEProbe"
+            name: "PocketPrinter5890Probe",
+            dependencies: ["PocketPrinter5890Kit", "PocketPrinter5890BLE"],
+            path: "Sources/PocketPrinter5890Probe"
         ),
         .testTarget(
-            name: "L13ReceiptPrinterTests",
-            dependencies: ["L13Core", "L13BLETransport"],
-            path: "Tests/L13ReceiptPrinterTests"
+            name: "PocketPrinter5890Tests",
+            dependencies: ["PocketPrinter5890Kit", "PocketPrinter5890BLE"],
+            path: "Tests/PocketPrinter5890Tests"
         )
     ]
 )

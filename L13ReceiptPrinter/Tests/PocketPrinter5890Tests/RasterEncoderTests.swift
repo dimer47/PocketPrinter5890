@@ -1,4 +1,4 @@
-import L13Core
+import PocketPrinter5890Kit
 import XCTest
 
 final class RasterEncoderTests: XCTestCase {

@@ -1,11 +1,11 @@
-import L13Core
+import PocketPrinter5890Kit
 import XCTest
 
-final class L13CommandTests: XCTestCase {
+final class PrinterCommandTests: XCTestCase {
     func testDensityCommands() {
-        XCTAssertEqual(L13Command.setDensity(.light), [0x10, 0xff, 0x10, 0x00, 0x00])
-        XCTAssertEqual(L13Command.setDensity(.medium), [0x10, 0xff, 0x10, 0x00, 0x01])
-        XCTAssertEqual(L13Command.setDensity(.strong), [0x10, 0xff, 0x10, 0x00, 0x02])
+        XCTAssertEqual(PrinterCommand.setDensity(.light), [0x10, 0xff, 0x10, 0x00, 0x00])
+        XCTAssertEqual(PrinterCommand.setDensity(.medium), [0x10, 0xff, 0x10, 0x00, 0x01])
+        XCTAssertEqual(PrinterCommand.setDensity(.strong), [0x10, 0xff, 0x10, 0x00, 0x02])
     }
 
     func testPrintSequenceStartsWithInitialiseAndDensity() throws {
@@ -17,18 +17,18 @@ final class L13CommandTests: XCTestCase {
 
         // Papier continu: pas de `1F 80` ni de calage `1D 0C`, comme
         // `printOnce()` dans le SDK officiel.
-        XCTAssertEqual(segments[0].bytes, L13Command.paperStatus)
-        XCTAssertEqual(segments[1].bytes, L13Command.Luck.enablePrinter())
-        XCTAssertEqual(segments[2].bytes, L13Command.Luck.wakeup)
+        XCTAssertEqual(segments[0].bytes, PrinterCommand.paperStatus)
+        XCTAssertEqual(segments[1].bytes, PrinterCommand.Luck.enablePrinter())
+        XCTAssertEqual(segments[2].bytes, PrinterCommand.Luck.wakeup)
         XCTAssertEqual(segments[3].bytes, ESCPOS.initialize)
         // `ESC t` n'est plus emis: ce firmware l'ignore et laisse meme un
         // octet parasite s'imprimer.
         XCTAssertFalse(segments.contains { $0.bytes == ESCPOS.codePageLatin1 })
-        XCTAssertEqual(segments[4].bytes, L13Command.setDensity(.strong))
+        XCTAssertEqual(segments[4].bytes, PrinterCommand.setDensity(.strong))
         XCTAssertEqual(Array(segments[5].bytes.prefix(6)), [0x1d, 0x76, 0x30, 0x00, 0x30, 0x00])
 
-        XCTAssertFalse(segments.contains { $0.bytes == L13Command.Luck.position })
-        XCTAssertEqual(segments[segments.count - 1].bytes, L13Command.Luck.stopPrintJob)
+        XCTAssertFalse(segments.contains { $0.bytes == PrinterCommand.Luck.position })
+        XCTAssertEqual(segments[segments.count - 1].bytes, PrinterCommand.Luck.stopPrintJob)
     }
 
     func testLabelModeAddsPaperTypeAndPositioning() throws {
@@ -38,8 +38,8 @@ final class L13CommandTests: XCTestCase {
             options: PrintOptions(paperMode: .label, labelLength: 40)
         )
 
-        XCTAssertTrue(segments.contains { $0.bytes == L13Command.Luck.setPaperType(length: 40) })
-        XCTAssertTrue(segments.contains { $0.bytes == L13Command.Luck.position })
+        XCTAssertTrue(segments.contains { $0.bytes == PrinterCommand.Luck.setPaperType(length: 40) })
+        XCTAssertTrue(segments.contains { $0.bytes == PrinterCommand.Luck.position })
     }
 
     func testRasterHeaderUses48BytesPerLine() throws {
@@ -77,8 +77,8 @@ final class L13CommandTests: XCTestCase {
         )
         let segments = PrintJobBuilder.segments(bitmap: bitmap, options: options)
 
-        XCTAssertTrue(segments.contains { $0.bytes == L13Command.experimentalPrePrintF130 })
-        XCTAssertTrue(segments.contains { $0.bytes == L13Command.experimentalPostPrint })
+        XCTAssertTrue(segments.contains { $0.bytes == PrinterCommand.experimentalPrePrintF130 })
+        XCTAssertTrue(segments.contains { $0.bytes == PrinterCommand.experimentalPostPrint })
     }
 
     func testExperimentalCommandsAreAbsentByDefault() throws {
@@ -87,7 +87,7 @@ final class L13CommandTests: XCTestCase {
 
         // `experimentalPrePrintF103` porte 12 octets de bourrage en plus du
         // prefixe; la vraie sequence envoie le reveil separement.
-        XCTAssertFalse(segments.contains { $0.bytes == L13Command.experimentalPrePrintF103 })
+        XCTAssertFalse(segments.contains { $0.bytes == PrinterCommand.experimentalPrePrintF103 })
         XCTAssertFalse(segments.contains { $0.name.contains("experimentale") })
     }
 }
@@ -96,11 +96,11 @@ final class LuckSequenceTests: XCTestCase {
     func testOfficialCommandBytes() {
         // Octets extraits de l'APK officielle com.printer.lidloffice
         // (LuckPrinter SDK, BaseNormalDevice / DP_D1).
-        XCTAssertEqual(L13Command.Luck.enablePrinter(), [0x10, 0xff, 0xf1, 0x03])
-        XCTAssertEqual(L13Command.Luck.wakeup, Array(repeating: 0x00, count: 12))
-        XCTAssertEqual(L13Command.Luck.setPaperType(), [0x1f, 0x80, 0x01, 0x20])
-        XCTAssertEqual(L13Command.Luck.position, [0x1d, 0x0c])
-        XCTAssertEqual(L13Command.Luck.stopPrintJob, [0x10, 0xff, 0xf1, 0x45])
+        XCTAssertEqual(PrinterCommand.Luck.enablePrinter(), [0x10, 0xff, 0xf1, 0x03])
+        XCTAssertEqual(PrinterCommand.Luck.wakeup, Array(repeating: 0x00, count: 12))
+        XCTAssertEqual(PrinterCommand.Luck.setPaperType(), [0x1f, 0x80, 0x01, 0x20])
+        XCTAssertEqual(PrinterCommand.Luck.position, [0x1d, 0x0c])
+        XCTAssertEqual(PrinterCommand.Luck.stopPrintJob, [0x10, 0xff, 0xf1, 0x45])
     }
 
     func testSequenceCanBeDisabled() throws {
@@ -109,7 +109,7 @@ final class LuckSequenceTests: XCTestCase {
             bitmap: bitmap,
             options: PrintOptions(useLuckSequence: false)
         )
-        XCTAssertFalse(segments.contains { $0.bytes == L13Command.Luck.stopPrintJob })
+        XCTAssertFalse(segments.contains { $0.bytes == PrinterCommand.Luck.stopPrintJob })
     }
 }
 
@@ -196,17 +196,17 @@ final class PrintDocumentTests: XCTestCase {
 
 final class ResponseDecoderTests: XCTestCase {
     func testDecodesOKAcknowledgement() {
-        XCTAssertEqual(L13ResponseDecoder.decode([0x4f, 0x4b], context: nil), "OK: commande acceptee")
+        XCTAssertEqual(ResponseDecoder.decode([0x4f, 0x4b], context: nil), "OK: commande acceptee")
     }
 
     func testCreditFrameIsDecodedAsFlowControl() {
         // `01 nn` = credit de flux, confirme par le SDK officiel
         // (d/e.java: credit.addAndGet(bArr[1] & 0xFF)).
-        XCTAssertEqual(L13ResponseDecoder.decode([0x01, 0x01], context: nil), "Credit de flux: +1 paquet(s)")
-        XCTAssertEqual(L13ResponseDecoder.decode([0x01, 0x04], context: nil), "Credit de flux: +4 paquet(s)")
+        XCTAssertEqual(ResponseDecoder.decode([0x01, 0x01], context: nil), "Credit de flux: +1 paquet(s)")
+        XCTAssertEqual(ResponseDecoder.decode([0x01, 0x04], context: nil), "Credit de flux: +4 paquet(s)")
     }
 
     func testBatteryDecoding() {
-        XCTAssertEqual(L13ResponseDecoder.decode([0x02, 0x64, 0x00], context: nil), "Batterie probable: 100%")
+        XCTAssertEqual(ResponseDecoder.decode([0x02, 0x64, 0x00], context: nil), "Batterie probable: 100%")
     }
 }

@@ -7,18 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A10000000000000000000001 /* L13ReceiptPrinterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* L13ReceiptPrinterApp.swift */; };
+		A10000000000000000000001 /* PocketPrinter5890App.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* PocketPrinter5890App.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* ContentView.swift */; };
-		A10000000000000000000003 /* L13Core in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000031 /* L13Core */; };
-		A10000000000000000000004 /* L13BLETransport in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000032 /* L13BLETransport */; };
+		A10000000000000000000003 /* PocketPrinter5890Kit in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000031 /* PocketPrinter5890Kit */; };
+		A10000000000000000000004 /* PocketPrinter5890BLE in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000032 /* PocketPrinter5890BLE */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A10000000000000000000010 /* L13ReceiptPrinterApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = L13ReceiptPrinterApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A10000000000000000000011 /* L13ReceiptPrinterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/L13ReceiptPrinter/L13ReceiptPrinterApp.swift; sourceTree = "<group>"; };
-		A10000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/L13ReceiptPrinter/ContentView.swift; sourceTree = "<group>"; };
+		A10000000000000000000010 /* PocketPrinter5890App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketPrinter5890App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000011 /* PocketPrinter5890App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890App/PocketPrinter5890App.swift; sourceTree = "<group>"; };
+		A10000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890App/ContentView.swift; sourceTree = "<group>"; };
 		A10000000000000000000013 /* AppInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = AppInfo.plist; sourceTree = "<group>"; };
-		A10000000000000000000014 /* L13ReceiptPrinter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = L13ReceiptPrinter.entitlements; sourceTree = "<group>"; };
+		A10000000000000000000014 /* PocketPrinter5890App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PocketPrinter5890App.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -26,8 +26,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000003 /* L13Core in Frameworks */,
-				A10000000000000000000004 /* L13BLETransport in Frameworks */,
+				A10000000000000000000003 /* PocketPrinter5890Kit in Frameworks */,
+				A10000000000000000000004 /* PocketPrinter5890BLE in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,17 +45,17 @@
 		A10000000000000000000050 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000011 /* L13ReceiptPrinterApp.swift */,
+				A10000000000000000000011 /* PocketPrinter5890App.swift */,
 				A10000000000000000000012 /* ContentView.swift */,
 				A10000000000000000000013 /* AppInfo.plist */,
-				A10000000000000000000014 /* L13ReceiptPrinter.entitlements */,
+				A10000000000000000000014 /* PocketPrinter5890App.entitlements */,
 			);
 			sourceTree = "<group>";
 		};
 		A10000000000000000000060 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000010 /* L13ReceiptPrinterApp.app */,
+				A10000000000000000000010 /* PocketPrinter5890App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -63,9 +63,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A10000000000000000000070 /* L13ReceiptPrinterApp */ = {
+		A10000000000000000000070 /* PocketPrinter5890App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A10000000000000000000090 /* Build configuration list for PBXNativeTarget "L13ReceiptPrinterApp" */;
+			buildConfigurationList = A10000000000000000000090 /* Build configuration list for PBXNativeTarget "PocketPrinter5890App" */;
 			buildPhases = (
 				A10000000000000000000021 /* Sources */,
 				A10000000000000000000020 /* Frameworks */,
@@ -75,13 +75,13 @@
 			);
 			dependencies = (
 			);
-			name = L13ReceiptPrinterApp;
+			name = PocketPrinter5890App;
 			packageProductDependencies = (
-				A10000000000000000000031 /* L13Core */,
-				A10000000000000000000032 /* L13BLETransport */,
+				A10000000000000000000031 /* PocketPrinter5890Kit */,
+				A10000000000000000000032 /* PocketPrinter5890BLE */,
 			);
-			productName = L13ReceiptPrinterApp;
-			productReference = A10000000000000000000010 /* L13ReceiptPrinterApp.app */;
+			productName = PocketPrinter5890App;
+			productReference = A10000000000000000000010 /* PocketPrinter5890App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -99,7 +99,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A10000000000000000000081 /* Build configuration list for PBXProject "L13ReceiptPrinterApp" */;
+			buildConfigurationList = A10000000000000000000081 /* Build configuration list for PBXProject "PocketPrinter5890App" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -115,7 +115,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A10000000000000000000070 /* L13ReceiptPrinterApp */,
+				A10000000000000000000070 /* PocketPrinter5890App */,
 			);
 		};
 /* End PBXProject section */
@@ -135,7 +135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000001 /* L13ReceiptPrinterApp.swift in Sources */,
+				A10000000000000000000001 /* PocketPrinter5890App.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -253,7 +253,7 @@
 		A10000000000000000000091 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = L13ReceiptPrinter.entitlements;
+				CODE_SIGN_ENTITLEMENTS = PocketPrinter5890App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -267,7 +267,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = local.L13ReceiptPrinter;
+				PRODUCT_BUNDLE_IDENTIFIER = local.PocketPrinter5890App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -276,7 +276,7 @@
 		A10000000000000000000092 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = L13ReceiptPrinter.entitlements;
+				CODE_SIGN_ENTITLEMENTS = PocketPrinter5890App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -290,7 +290,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = local.L13ReceiptPrinter;
+				PRODUCT_BUNDLE_IDENTIFIER = local.PocketPrinter5890App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -299,7 +299,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A10000000000000000000081 /* Build configuration list for PBXProject "L13ReceiptPrinterApp" */ = {
+		A10000000000000000000081 /* Build configuration list for PBXProject "PocketPrinter5890App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000082 /* Debug */,
@@ -308,7 +308,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A10000000000000000000090 /* Build configuration list for PBXNativeTarget "L13ReceiptPrinterApp" */ = {
+		A10000000000000000000090 /* Build configuration list for PBXNativeTarget "PocketPrinter5890App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000091 /* Debug */,
@@ -327,15 +327,15 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		A10000000000000000000031 /* L13Core */ = {
+		A10000000000000000000031 /* PocketPrinter5890Kit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000030 /* XCLocalSwiftPackageReference "." */;
-			productName = L13Core;
+			productName = PocketPrinter5890Kit;
 		};
-		A10000000000000000000032 /* L13BLETransport */ = {
+		A10000000000000000000032 /* PocketPrinter5890BLE */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000030 /* XCLocalSwiftPackageReference "." */;
-			productName = L13BLETransport;
+			productName = PocketPrinter5890BLE;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,6 +1,7 @@
 import Foundation
 #if canImport(CoreImage)
 import CoreImage
+import CoreGraphics
 #endif
 
 /// Conversion des codes en bitmaps imprimables.
