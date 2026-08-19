@@ -12,7 +12,7 @@ Android application, which embeds the LuckPrinter SDK.
 
 | TRONIC | SILVERCREST |
 |---|---|
-| ![TRONIC pocket printer](docs/images/tronic-1.jpg) | ![SILVERCREST pocket printer](docs/images/silvercrest-1.jpg) |
+| <img src="docs/images/tronic-1.jpg" alt="TRONIC pocket printer" width="380"> | <img src="docs/images/silvercrest-1.jpg" alt="SILVERCREST pocket printer" width="380"> |
 
 Both brands ship the same hardware, the same firmware and the same official
 application: only the logo on the lid differs.

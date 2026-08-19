@@ -12,7 +12,7 @@ frames exchanged with the device, then decompilation of the official
 
 | TRONIC | SILVERCREST |
 |---|---|
-| ![TRONIC pocket printer](../docs/images/tronic-1.jpg) | ![SILVERCREST pocket printer](../docs/images/silvercrest-1.jpg) |
+| <img src="../docs/images/tronic-1.jpg" alt="TRONIC pocket printer" width="380"> | <img src="../docs/images/silvercrest-1.jpg" alt="SILVERCREST pocket printer" width="380"> |
 
 The two brands ship the same hardware, the same firmware and the same
 official application: only the logo on the lid differs.
@@ -72,7 +72,7 @@ inherits from `DP_D1`.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<you>/PocketPrinter5890.git", from: "1.0.0")
+    .package(url: "https://github.com/dimer47/PocketPrinter5890.git", from: "1.0.0")
 ]
 ```
 

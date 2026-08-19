@@ -13,7 +13,7 @@ echangees avec la machine, puis decompilation de l'application officielle
 
 | TRONIC | SILVERCREST |
 |---|---|
-| ![Mini imprimante de poche TRONIC](../docs/images/tronic-1.jpg) | ![Mini imprimante de poche SILVERCREST](../docs/images/silvercrest-1.jpg) |
+| <img src="../docs/images/tronic-1.jpg" alt="Mini imprimante de poche TRONIC" width="380"> | <img src="../docs/images/silvercrest-1.jpg" alt="Mini imprimante de poche SILVERCREST" width="380"> |
 
 Les deux marques couvrent le meme materiel, le meme firmware et la meme
 application officielle: seul le logo sur le capot change.
@@ -73,7 +73,7 @@ Le modele `A2Y` correspond dans le SDK officiel a la classe
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<vous>/PocketPrinter5890.git", from: "1.0.0")
+    .package(url: "https://github.com/dimer47/PocketPrinter5890.git", from: "1.0.0")
 ]
 ```
 
