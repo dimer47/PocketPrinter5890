@@ -154,6 +154,21 @@ Bandes  : 24 lignes par commande; un raster envoye d'un bloc est perdu
 La tete couvre 48 mm sur un papier de ~56 mm: environ 8 mm de marges
 physiques sont normales et non corrigeables logiciellement.
 
+### Pieges d'encodage
+
+Deux commandes multi-octets se pretent aux erreurs, et toutes deux avaient
+d'abord ete mal portees ici:
+
+```text
+10 FF 12 hi lo               extinction auto, DEUX octets, gros-boutiste
+10 FF 15 lo hi               largeur d'impression, petit-boutiste
+10 FF 53 4A f + 7 octets     horloge, l'en-tete precede la date
+```
+
+Le SDK n'est pas homogene sur l'ordre des octets entre ces deux commandes.
+Une extinction codee sur un seul octet plafonne a 255 minutes et decale la
+valeur; une commande d'horloge sans son en-tete ne produit rien.
+
 ### Controle de flux
 
 Les trames `01 nn` recues **ne sont ni des statuts ni des acquittements**:

@@ -73,3 +73,7 @@
 "shutdown.apply" = "Apply";
 "shutdown.hint" = "0 disables power-off, if the firmware accepts it. Untested value.";
 "settings.read" = "Read current settings";
+
+/* Onglets en fenetre etroite */
+"tab.editor" = "Receipt";
+"tab.preview" = "Preview";

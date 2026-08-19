@@ -73,3 +73,7 @@
 "shutdown.apply" = "Appliquer";
 "shutdown.hint" = "0 desactive l%@extinction, si le firmware l%@accepte. Valeur non testee.";
 "settings.read" = "Lire les reglages actuels";
+
+/* Onglets en fenetre etroite */
+"tab.editor" = "Ticket";
+"tab.preview" = "Apercu";

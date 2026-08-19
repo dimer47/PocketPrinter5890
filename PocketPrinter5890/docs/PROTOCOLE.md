@@ -10,8 +10,10 @@ Derniere mise a jour: 2026-08-19 (revision majeure)
 > Le materiel reel est une **mini imprimante de poche a ticket de caisse, papier 56 mm**,
 > de la famille generique **5890**, largeur d'impression **384 px = 48 octets par ligne**.
 >
-> L'ancienne consigne "ne jamais utiliser 384 px, la largeur est 96 px" etait **la cause principale
-> de l'echec d'impression**. Elle est annulee. Toute copie de l'ancien document doit etre ignoree.
+> L'ancienne consigne "ne jamais utiliser 384 px, la largeur est 96 px" est annulee: elle
+> rendait tout raster inexploitable. Elle n'etait cependant pas la seule cause du blocage.
+> Meme corrigee, rien ne s'imprimait sans la sequence d'activation LuckPrinter decrite
+> plus bas, qui manquait egalement. Toute copie de l'ancien document doit etre ignoree.
 >
 > Sauvegarde de l'ancienne version: `MEGA_PROMPT_L13.md.bak`.
 >
@@ -94,8 +96,8 @@ Tout echec d'impression du projet est un bug logiciel, jamais un probleme materi
 - **Ce n'est pas une L13 a etiquettes.** La L13 documentee par atctwo est une imprimante
   d'etiquettes de 14 mm de large, 96 px, 12 octets par ligne. Modele different.
 - Le nom de modele `DP-L13` provient de l'article atctwo, **pas** d'une reponse de cette machine.
-  Dans tous les logs analyses, la commande "Lire modele" n'a jamais recu de reponse identifiable.
-  Ne jamais affirmer que cette imprimante est une DP-L13 sans reponse `10 FF 20 F0` verifiee.
+  La machine repond `A2Y` a `10 FF 20 F0` et `V1.06LY` a `10 FF 20 F1`: le
+  modele est donc etabli, et ce n'est pas une DP-L13.
 - Ne jamais reintroduire 96 px comme largeur par defaut. 96 px doit rester au mieux une option
   de compatibilite pour d'autres machines.
 
@@ -201,20 +203,59 @@ n'a pas ete implementee.
 
 Commandes proprietaires (confirmees sur cette machine):
 
+Referentiel complet des vingt commandes proprietaires du SDK, verifie octet
+par octet contre `BaseNormalDevice`:
+
 ```text
-Modele:             10 FF 20 F0
-Firmware:           10 FF 20 F1
+LECTURE
+Modele:             10 FF 20 F0        -> "A2Y"
+Firmware:           10 FF 20 F1        -> "V1.06LY"
 Numero de serie:    10 FF 20 F2
-Batterie:           10 FF 50 F1
+Bootloader:         10 FF 20 EF
+Vitesse:            10 FF 20 A0
+Batterie:           10 FF 50 F1        -> 00 nn, nn = pourcentage
 Etat papier:        10 FF 40
-Densite faible:     10 FF 10 00 00
-Densite moyenne:    10 FF 10 00 01
-Densite forte:      10 FF 10 00 02
-Extinction auto:    10 FF 12 00 n
+Densite:            10 FF 11
+Extinction auto:    10 FF 13           -> deux octets, gros-boutiste
+Format horaire:     10 FF B0
+Reglages:           10 FF 70
+
+ECRITURE
+Densite:            10 FF 10 00 n      n = 0 faible, 1 moyenne, 2 forte
+Extinction auto:    10 FF 12 hi lo     DEUX octets, gros-boutiste
+Largeur:            10 FF 15 lo hi     petit-boutiste
+Vitesse:            10 FF C0 n
+Mode:               10 FF 30 27 n
+Reset usine:        10 FF 04
+Horloge:            10 FF 53 4A f + AAAA MM JJ hh mm ss
+Chauffe:            1F 70 01 n
+Plateforme:         FC FF 00 02 45 02 00 46
+
+CYCLE D'IMPRESSION
+Activation:         10 FF F1 03
+Reveil:             00 x12             commande distincte
+Type de papier:     1F 80 type len
+Calage:             1D 0C
+Fin de travail:     10 FF F1 45
 ```
 
-Statut: `10 FF 10 00 01` recoit bien `OK` sur FF01, donc la famille `10 FF ...` est comprise
-par la machine. En revanche `10 FF 20 F0` n'a jamais renvoye de chaine ASCII de modele.
+Deux pieges d'encodage releves en comparant au SDK:
+
+- `10 FF 12` (extinction) prend **deux** octets, gros-boutiste `(n/256, n%256)`.
+  Une implementation a un seul octet plafonne a 255 minutes et decale la valeur.
+- `10 FF 53 4A` (horloge) prefixe les sept octets de date. Envoyer la date
+  seule ne produit rien.
+
+Notez l'inversion d'ordre entre `10 FF 12` (gros-boutiste) et `10 FF 15`
+(petit-boutiste): le SDK n'est pas homogene sur ce point.
+
+Le reglage de densite `10 FF 10 00 01` recoit `OK` sur FF01, ce qui confirme
+que la famille `10 FF ...` est comprise. Les commandes de lecture repondent
+sur FF01 apres une trame de credit `01 nn`.
+
+Aucune commande d'extinction a distance n'existe dans le SDK: les vingt
+commandes ci-dessus ont ete passees en revue. Une machine eteinte ne pouvant
+plus etre reveillee par BLE, la fonction serait sans retour.
 
 Commandes ESC/POS standard - **socle a privilegier**, la machine est une 5890 generique:
 

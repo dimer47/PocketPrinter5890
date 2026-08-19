@@ -17,23 +17,38 @@ struct ContentView: View {
     @State private var textBold = false
     @State private var textAlignment: ESCPOS.Alignment = .left
     @State private var autoShutdown = 15.0
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebar
-                // Colonne compressible: sur un ecran etroit elle se reduit
-                // au lieu de pousser la fenetre hors de l'ecran.
-                .navigationSplitViewColumnWidth(min: 260, ideal: 340, max: 460)
+                .navigationSplitViewColumnWidth(min: 240, ideal: 320, max: 420)
         } detail: {
-            HSplitView {
-                editor.frame(minWidth: 300)
-                previewAndConsole.frame(minWidth: 320)
+            // En dessous d'un certain seuil, l'editeur et l'apercu ne
+            // tiennent plus cote a cote: on bascule alors en onglets plutot
+            // que de laisser la fenetre pousser la barre laterale hors de
+            // l'ecran.
+            GeometryReader { geometry in
+                if geometry.size.width < 760 {
+                    TabView {
+                        editor
+                            .tabItem { Text("tab.editor") }
+                        previewAndConsole
+                            .tabItem { Text("tab.preview") }
+                    }
+                    .padding(.top, 4)
+                } else {
+                    HSplitView {
+                        editor.frame(minWidth: 300)
+                        previewAndConsole.frame(minWidth: 320)
+                    }
+                }
             }
         }
-        // Taille minimale volontairement basse: la fenetre doit tenir sur
-        // un ecran de portable, quitte a comprimer les colonnes. Une
-        // contrainte trop haute faisait deborder la fenetre hors de l'ecran.
-        .frame(minWidth: 900, idealWidth: 1200, minHeight: 560, idealHeight: 800)
+        // `.automatic` laisse macOS escamoter la barre laterale quand la
+        // fenetre devient etroite, au lieu de la conserver a tout prix.
+        .navigationSplitViewStyle(.automatic)
+        .frame(minWidth: 480, idealWidth: 1200, minHeight: 480, idealHeight: 800)
     }
 
     private var sidebar: some View {

@@ -152,6 +152,21 @@ Bands   : 24 lines per command; a raster sent in one block is dropped
 The print head covers 48 mm on ~56 mm paper: about 8 mm of physical margins
 are expected and cannot be corrected in software.
 
+### Encoding pitfalls
+
+Two multi-byte commands are easy to get wrong, and both were initially
+mis-ported here:
+
+```text
+10 FF 12 hi lo               auto power-off, TWO bytes, big-endian
+10 FF 15 lo hi               print width, little-endian
+10 FF 53 4A f + 7 bytes      clock, the header precedes the date
+```
+
+The SDK is not consistent on byte order between those two commands. A
+single-byte power-off caps at 255 minutes and shifts the value; a clock
+command sent without its header does nothing at all.
+
 ### Flow control
 
 Incoming `01 nn` frames are **neither status nor acknowledgements**: they
