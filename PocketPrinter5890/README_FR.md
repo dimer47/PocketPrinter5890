@@ -256,7 +256,8 @@ Sources/PocketPrinter5890Probe/  outil console de diagnostic
 Tests/                           89 tests unitaires
 Examples/DemoApp/                application macOS SwiftUI de demonstration
 Examples/DemoAppIOS/             application iOS et iPadOS de demonstration
-docs/PROTOCOLE.md                notes detaillees de retro-ingenierie
+docs/PROTOCOL_SPEC.md            specification du protocole, hors langage
+docs/PROTOCOLE.md                notes brutes de retro-ingenierie
 ```
 
 ## Diagnostic en console
@@ -290,8 +291,15 @@ rendrait l'imprimante inutilisable.
 
 ## Reimplementer dans un autre langage
 
-`docs/PROTOCOLE.md` est ecrit pour cela. Il documente, au-dela des commandes
-qui fonctionnent:
+**[`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)** est la specification:
+independante du langage, lisible sans connaitre Swift, et suffisante pour
+ecrire une implementation depuis zero. Elle porte les sequences d'octets,
+l'algorithme de controle de flux, les notes de transport par plateforme
+(CoreBluetooth, Web Bluetooth, Capacitor), un tableau symptome-cause et une
+implementation minimale en pseudocode.
+
+`docs/PROTOCOLE.md` conserve les notes brutes de retro-ingenierie. Il
+documente, au-dela des commandes qui fonctionnent:
 
 - **ce que le firmware n'honore pas** (`ESC t`, `GS ( k`, `GS k`, `GS B`,
   caracteres non-ASCII), avec les traces reellement obtenues sur papier;
@@ -302,9 +310,6 @@ qui fonctionnent:
 
 ## A faire
 
-- **Document de protocole autonome** decrivant toutes les trames decodees,
-  destine a une reimplementation dans un autre langage (Python, Go, Java...)
-  sans passer par la librairie Swift.
 - Raster compresse (`setCompress(true)` pour l'A2Y), pour accelerer les gros
   travaux.
 - Negociation du MTU jusqu'a 512 octets; la valeur est actuellement fixee a

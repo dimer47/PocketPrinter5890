@@ -252,7 +252,8 @@ Sources/PocketPrinter5890Probe/  console diagnostic tool
 Tests/                           89 unit tests
 Examples/DemoApp/                macOS SwiftUI demonstration app
 Examples/DemoAppIOS/             iOS and iPadOS demonstration app
-docs/PROTOCOLE.md                detailed reverse-engineering notes
+docs/PROTOCOL_SPEC.md            protocol specification, language-independent
+docs/PROTOCOLE.md                raw reverse-engineering notes (French)
 ```
 
 ## Console diagnostics
@@ -285,8 +286,14 @@ port failing mid-write would leave the printer unusable.
 
 ## Reimplementing in another language
 
-`docs/PROTOCOLE.md` is written for that purpose. It documents, beyond the
-working commands:
+**[`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)** is the specification:
+language-independent, readable without any Swift, and enough to write an
+implementation from scratch. It carries the byte sequences, the flow-control
+algorithm, per-platform transport notes (CoreBluetooth, Web Bluetooth,
+Capacitor), a symptom-to-cause table and a minimal pseudocode implementation.
+
+`docs/PROTOCOLE.md` keeps the raw reverse-engineering notes in French. It
+documents, beyond the working commands:
 
 - **what the firmware does not honour** (`ESC t`, `GS ( k`, `GS k`, `GS B`,
   non-ASCII characters), with the actual traces seen on paper;
@@ -297,9 +304,6 @@ working commands:
 
 ## To do
 
-- **Standalone protocol document** covering every decoded frame, aimed at
-  reimplementation in another language (Python, Go, Java...) without going
-  through the Swift library.
 - Compressed raster (`setCompress(true)` for the A2Y), to speed up large
   jobs.
 - MTU negotiation up to 512 bytes; currently pinned at 180.
