@@ -13,7 +13,7 @@ echangees avec la machine, puis decompilation de l'application officielle
 
 | TRONIC | SILVERCREST |
 |---|---|
-| ![Mini imprimante de poche TRONIC](docs/images/tronic-1.jpg) | ![Mini imprimante de poche SILVERCREST](docs/images/silvercrest-1.jpg) |
+| ![Mini imprimante de poche TRONIC](../docs/images/tronic-1.jpg) | ![Mini imprimante de poche SILVERCREST](../docs/images/silvercrest-1.jpg) |
 
 Les deux marques couvrent le meme materiel, le meme firmware et la meme
 application officielle: seul le logo sur le capot change.
@@ -50,7 +50,7 @@ application officielle:
 Caracteristiques communes: impression thermique sans encre, 203 dpi, rouleau
 de 7,8 m, batterie Li-ion 1200 mAh, USB-C, dimensions ~89 x 42 mm.
 
-![L'imprimante en situation](docs/images/tronic-3.jpg)
+![L'imprimante en situation](../docs/images/tronic-3.jpg)
 
 *Images: fiches produit Lidl.*
 
@@ -233,7 +233,7 @@ des peripheriques, details GATT, niveau de batterie, editeur de ticket avec
 apercu en direct, texte natif, codes-barres, delai d'extinction automatique,
 et une console hexadecimale montrant chaque trame dans les deux sens.
 
-![Application de demonstration macOS](docs/images/app-macos.jpg)
+![Application de demonstration macOS](../docs/images/app-macos.jpg)
 
 L'interface suit la langue du systeme (francais ou anglais) et un menu
 **Langue** permet de basculer, ce qui rend les deux traductions verifiables
@@ -257,8 +257,8 @@ Sources/PocketPrinter5890Probe/  outil console de diagnostic
 Tests/                           89 tests unitaires
 Examples/DemoApp/                application macOS SwiftUI de demonstration
 Examples/DemoAppIOS/             application iOS et iPadOS de demonstration
-docs/PROTOCOL_SPEC.md            specification du protocole, hors langage
-docs/PROTOCOLE.md                notes brutes de retro-ingenierie
+../docs/PROTOCOL_SPEC.md            specification du protocole, hors langage
+../docs/PROTOCOLE.md                notes brutes de retro-ingenierie
 ```
 
 ## Diagnostic en console
@@ -292,14 +292,14 @@ rendrait l'imprimante inutilisable.
 
 ## Reimplementer dans un autre langage
 
-**[`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)** est la specification:
+**[`../docs/PROTOCOL_SPEC.md`](../docs/PROTOCOL_SPEC.md)** est la specification:
 independante du langage, lisible sans connaitre Swift, et suffisante pour
 ecrire une implementation depuis zero. Elle porte les sequences d'octets,
 l'algorithme de controle de flux, les notes de transport par plateforme
 (CoreBluetooth, Web Bluetooth, Capacitor), un tableau symptome-cause et une
 implementation minimale en pseudocode.
 
-`docs/PROTOCOLE.md` conserve les notes brutes de retro-ingenierie. Il
+`../docs/PROTOCOLE.md` conserve les notes brutes de retro-ingenierie. Il
 documente, au-dela des commandes qui fonctionnent:
 
 - **ce que le firmware n'honore pas** (`ESC t`, `GS ( k`, `GS k`, `GS B`,

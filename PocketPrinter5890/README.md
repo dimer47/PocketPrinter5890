@@ -1,25 +1,45 @@
 # PocketPrinter5890
 
-*[Version française](README_FR.md)*
+Drive the thermal pocket printers sold by Lidl under the **Tronic**,
+**SILVERCREST** and **Parkside** brands over Bluetooth Low Energy — without
+the official app, and without any cloud service.
 
-Swift library for driving over Bluetooth Low Energy the thermal pocket
-printers sold by Lidl under the **Tronic**, **SILVERCREST** and **Parkside**
-brands, without the official app and without any cloud service.
-
-The protocol was established by reverse engineering: analysis of the BLE
-frames exchanged with the device, then decompilation of the official
-`com.printer.lidloffice` application, which embeds the **LuckPrinter SDK**.
+The protocol was established by reverse engineering: BLE traffic analysis on
+real hardware, then decompilation of the official `com.printer.lidloffice`
+Android application, which embeds the LuckPrinter SDK.
 
 | TRONIC | SILVERCREST |
 |---|---|
 | ![TRONIC pocket printer](docs/images/tronic-1.jpg) | ![SILVERCREST pocket printer](docs/images/silvercrest-1.jpg) |
 
-The two brands ship the same hardware, the same firmware and the same
-official application: only the logo on the lid differs.
+Both brands ship the same hardware, the same firmware and the same official
+application: only the logo on the lid differs.
 
-## Target hardware
+## What is here
 
-Markings found on the device label:
+| Directory | Contents |
+|---|---|
+| **[`docs/`](docs/)** | Protocol specification — the reference, independent of any language |
+| **[`swift/`](swift/)** | Swift library for macOS, iOS and iPadOS, plus two demo apps |
+| **[`web/`](web/)** | TypeScript library for the browser and Capacitor |
+
+The protocol specification is the source of truth. Both implementations
+follow it; if they ever disagree, the specification is what a third one
+should be written against.
+
+## Start here
+
+**Reimplementing in another language?** Read
+**[`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)**. It is written to be
+sufficient on its own: byte sequences, the flow-control algorithm, a
+symptom-to-cause table and a minimal pseudocode implementation. No Swift or
+TypeScript knowledge needed.
+
+**Building an Apple app?** See [`swift/README.md`](swift/README.md).
+
+**Building for the web or with Capacitor?** See [`web/README.md`](web/README.md).
+
+## The hardware
 
 ```text
 TRONIC
@@ -28,292 +48,88 @@ Article Name : Mini Pocket Printer
 Model        : 5890
 Battery      : 18500 Lithium Battery 3.7V 1200mAh 4.44Wh
 Input        : USB-C; 5V = 1A
-EIRP         : 0.79 dBm
-Frequency    : 2402-2480 MHz
 Manufactured : 09-2025
 ```
 
-Distributed by Karsten International, Overschiestraat 63, 1062 XD Amsterdam,
-Netherlands — <info@karsten.nl> — made in China.
+Reported by the device over BLE: model `A2Y`, firmware `V1.06LY`, advertised
+as `Mini Pocket Printer_BLE`.
 
-### Known variants
+Print width is **384 dots** (48 bytes per line) at 203 dpi, on roughly 56 mm
+continuous paper.
 
-The same hardware is sold under several Lidl brands, with the same official
-application:
+> **This is not a DP-L13.** The widely available documentation for the L13
+> describes a 14 mm label printer with a 96-dot raster — a different machine.
+> Applying its specifications here prevents printing entirely.
 
-| Brand | Lidl reference | IAN | Bluetooth | Weight |
-|---|---|---|---|---|
-| TRONIC | 100406318 | 508705_2507 | 5.3 | ~166 g |
-| SILVERCREST | 100390313 | — | 5.0 | ~149 g |
+## The three things that block a naive implementation
 
-Shared characteristics: inkless thermal printing, 203 dpi, 7.8 m roll,
-1200 mAh Li-ion battery, USB-C, roughly 89 x 42 mm.
+Each of these cost significant time to find. They are the reason this
+repository exists rather than a shorter gist.
 
-![The printer in use](docs/images/tronic-3.jpg)
+**1. An activation sequence is mandatory.** Without `10 FF F1 03` followed by
+twelve zero bytes as a *separate* write, the printer acknowledges every
+command and executes nothing — not even a paper feed.
 
-*Images: Lidl product pages.*
+**2. `01 nn` frames are flow-control credits, not status.** The printer
+announces how many packets it can accept. Pacing with a fixed delay instead
+divides throughput by roughly twenty. Reading one as a reply makes `01 01`
+look like "battery: 1%".
 
-### Identity reported by the device
+**3. The raster must be sent in bands.** A single large `GS v 0` command is
+dropped. Split into bands of about 24 lines.
 
-```text
-Model    : A2Y        (10 FF 20 F0)
-Firmware : V1.06LY    (10 FF 20 F1)
-BLE name : Mini Pocket Printer_BLE
-```
+## What the firmware does not support
 
-In the official SDK, model `A2Y` maps to the `MiniPocketPrinter` class, which
-inherits from `DP_D1`.
+Established by printing on paper, not inferred:
 
-> **This hardware is not a DP-L13.** The public documentation for the L13
-> (a 14 mm label printer, 96 px raster) describes a different model. Applying
-> its specifications to this device prevents printing altogether.
-
-## Installation
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/<you>/PocketPrinter5890.git", from: "1.0.0")
-]
-```
-
-Platforms: **macOS 10.15+**, **iOS 13+**, **iPadOS 13+**. Those floors are set
-by `@Published` (Combine), which does not exist before. iPadOS builds from the
-same iOS targets. Printing has been verified on macOS and on a physical
-iPhone.
-
-The whole library works on all three platforms: protocol, documents,
-receipt rendering, barcodes, QR codes and BLE transport. `ReceiptRenderer`
-is written on CoreGraphics and CoreText rather than AppKit for that reason.
-
-Two products:
-
-- `PocketPrinter5890Kit` — protocol, documents, rendering, barcodes. No
-  CoreBluetooth dependency: usable with any transport.
-- `PocketPrinter5890BLE` — ready-to-use CoreBluetooth transport.
-
-## Usage
-
-```swift
-import PocketPrinter5890Kit
-import PocketPrinter5890BLE
-
-let transport = PocketPrinter5890BLE()
-let printer = PocketPrinter(transport: transport)
-
-// Device information
-printer.readDeviceInformation()      // model, firmware, battery, paper
-printer.setDensity(.strong)
-
-// Composed document
-var document = PrintDocument()
-document.append(.title("BAKERY"))
-document.append(.centered("12 Lilac Street"))
-document.append(.separator(character: "-"))
-document.append(.text(TextLayout.columns("2x Baguette", "2.40 EUR", width: 32)))
-document.append(try PrintElement.qr("https://example.com"))
-document.append(try PrintElement.code("REF12345", symbology: .ean13))
-printer.print(document)
-```
-
-Printing an image (macOS):
-
-```swift
-let renderer = ReceiptRenderer(width: 384, ditherMode: .floydSteinberg)
-printer.print(try renderer.bitmap(from: myImage))
-```
-
-## Protocol
-
-### Activation sequence, mandatory
-
-Without it the firmware acknowledges every command and **executes nothing**,
-not even a paper feed. It comes from `DP_D1.printTagOnce()` in the SDK.
-
-```text
-10 FF F1 03                      enable the motor
-00 x12                           wake-up (a SEPARATE command)
-1F 80 <type> <len>               label length (label mode only)
-1D 76 30 00 30 00 <yL> <yH> ...  raster, in bands of 24 lines
-1B 4A <n>                        paper clearance
-1D 0C                            positioning (label mode only)
-10 FF F1 45                      end of job
-```
-
-The twelve zero bytes form a distinct command: several public write-ups
-wrongly append them to `10 FF F1 03`.
-
-### Raster
-
-```text
-Width   : 384 px = 48 bytes per line  ->  xL xH = 30 00
-Encoding: 1 bit per pixel, MSB first, bit set = black dot
-Bands   : 24 lines per command; a raster sent in one block is dropped
-```
-
-The print head covers 48 mm on ~56 mm paper: about 8 mm of physical margins
-are expected and cannot be corrected in software.
-
-### Encoding pitfalls
-
-Two multi-byte commands are easy to get wrong, and both were initially
-mis-ported here:
-
-```text
-10 FF 12 hi lo               auto power-off, TWO bytes, big-endian
-10 FF 15 lo hi               print width, little-endian
-10 FF 53 4A f + 7 bytes      clock, the header precedes the date
-```
-
-The SDK is not consistent on byte order between those two commands. A
-single-byte power-off caps at 255 minutes and shifts the value; a clock
-command sent without its header does nothing at all.
-
-### Flow control
-
-Incoming `01 nn` frames are **neither status nor acknowledgements**: they
-announce that the printer can accept `nn` more packets. The SDK does
-`credit.addAndGet(bArr[1] & 0xFF)` then sends up to `credit` packets in a
-row. Ignoring this mechanism divides throughput by twenty.
-
-### BLE
-
-Service **FF00**: write to `FF02`, notifications on `FF01` and `FF03`. The
-three other advertised services (Microchip Transparent UART, `18F0`,
-`e781...`) accept writes but never notify.
-
-Observed responses:
-
-```text
-FF01: 41 32 59              "A2Y"       model
-FF01: 56 31 2E 30 36 4C 59  "V1.06LY"   firmware
-FF01: 00 62                 98 %        battery (second byte)
-FF01: 4F 4B                 "OK"        command accepted
-FF03: 01 nn                             flow-control credit
-```
-
-## Firmware limitations
-
-Established by measurement, not assumed:
-
-| Feature | State |
+| Command | Behaviour |
 |---|---|
-| `ESC t` code pages | **Ignored.** Nine pages tested, nine identical unreadable lines. It even lets a stray byte print. |
-| Accents, `°`, symbols | **Unsupported** in text mode: solid block. Text is transliterated to ASCII (`18°C` -> `18degC`). |
-| `GS B` reverse video | Not implemented. |
-| `GS ( k` QR code | **Not implemented**: prints as plain text (`k1A2k1Ck1E1k1P0...`). |
-| `GS k` barcode | **Not implemented**: prints as plain text (`<I{BMETEO2026`). |
+| `ESC t` — code page | Ignored. Nine pages tested, nine identical unreadable lines. |
+| Non-ASCII characters | Solid block. Transliterate to ASCII. |
+| `GS B` — reverse video | No effect. |
+| `GS ( k` — QR code | Prints as literal text: `k1A2k1Ck1E1k1P0...` |
+| `GS k` — barcode | Prints as literal text: `<I{BMETEO2026` |
 
-The official SDK exposes **no** text-printing function at all: the app
-renders everything to a bitmap on the phone. The native text mode in this
-library works but stays off the path the manufacturer took.
+Codes therefore have to be rasterised. The vendor app does the same: its SDK
+exposes no text or code printing at all, only bitmaps.
 
-Practical consequence: codes are generated as images. Linear barcodes
-(Code 128, Code 39, EAN-13, EAN-8) are produced in **pure Swift**, with no
-system dependency; QR codes rely on CoreImage, isolated behind
-`CodeBitmaps.qrMatrix` so it stays replaceable.
+## Status
 
-## Paper modes
+| | Swift | TypeScript |
+|---|---|---|
+| Protocol, raster, ESC/POS | ✅ | ✅ |
+| Barcodes (Code 128/39, EAN-13/8) | ✅ | ✅ |
+| QR codes | ✅ CoreImage | ⚠️ bring your own encoder |
+| Receipt rendering | ✅ CoreGraphics | ✅ Canvas |
+| Printing verified on hardware | ✅ macOS + iPhone | ⏳ not yet |
 
-- **Continuous paper**: no declared length, printing stops at the end of the
-  content. A clearance feed (80 dots by default, ~10 mm) pushes the receipt
-  clear of the print head.
-- **Labels**: length declared through `1F 80`, positioning `1D 0C` between
-  each one.
+Roughly twenty commands were transcribed from the vendor SDK but never
+executed on this firmware; they are flagged as such in both implementations
+and in the specification.
 
-The SDK separates these cases with `printOnce()` and `printTagOnce()`.
-Sending `1F 80` on continuous paper wastes paper.
+Firmware update was deliberately left unimplemented: an untested port failing
+mid-write would leave the printer unusable.
 
-## Demonstration app
+## Contributing
 
-`Examples/DemoApp` drives the printer from a macOS window: device discovery,
-GATT details, battery level, receipt editor with live preview, native text,
-barcodes, auto power-off delay, and a hex console showing every frame in both
-directions.
+This documents a single unit — `A2Y` / `V1.06LY`. Other brand variants or
+firmware revisions may behave differently. Useful reports, in order of
+interest:
 
-![macOS demonstration app](docs/images/app-macos.jpg)
+1. An untested command actually run on hardware — state model, firmware,
+   command and outcome.
+2. A different model answering something else to `10 FF 20 F0`.
+3. The compressed raster format: the SDK calls `setCompress(true)` for the
+   A2Y, implying an encoding not documented here.
+4. USB-C behaviour — does the printer stay awake while powered?
 
-The interface follows the system language (English or French) and a
-**Language** menu switches between them, which makes both translations
-verifiable without touching system settings.
-
-`Examples/DemoAppIOS` is the iOS and iPadOS counterpart, organised as five
-tabs — connection, receipt, printing, settings, console — with the same
-feature set adapted to touch.
-
-> Verified on a physical iPhone: discovery, connection and printing all work.
-> Note that the simulator has no Bluetooth, so only a real device can talk to
-> the printer. Running it on hardware requires selecting a development team in
-> Xcode.
-
-## Repository layout
-
-```text
-Sources/PocketPrinter5890Kit/    library: protocol, documents, rendering, codes
-Sources/PocketPrinter5890BLE/    CoreBluetooth transport
-Sources/PocketPrinter5890Probe/  console diagnostic tool
-Tests/                           89 unit tests
-Examples/DemoApp/                macOS SwiftUI demonstration app
-Examples/DemoAppIOS/             iOS and iPadOS demonstration app
-docs/PROTOCOL_SPEC.md            protocol specification, language-independent
-docs/PROTOCOLE.md                raw reverse-engineering notes (French)
-```
-
-## Console diagnostics
-
-```bash
-swift run PocketPrinter5890Probe --profile=ff00              # device info
-swift run PocketPrinter5890Probe --profile=ff00 --feed-big   # paper feed
-swift run PocketPrinter5890Probe --profile=ff00 --print-test # width pattern
-swift run PocketPrinter5890Probe --profile=ff00 --code-pages # code page probe
-```
-
-## Tests
-
-```bash
-swift test
-```
-
-## Validation status
-
-Confirmed on hardware, on **macOS and iOS**: raster printing, paper feed,
-clearance, paper modes, native text, QR codes and barcodes, reading model /
-firmware / battery / paper, flow control.
-
-Ported from the SDK but **untested** on this firmware, flagged in the code:
-print speed, heating level, internal clock, cut marks, printer mode, factory
-reset.
-
-Deliberately not ported: firmware update (`updatePrinterLuck`). An untested
-port failing mid-write would leave the printer unusable.
-
-## Reimplementing in another language
-
-**[`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)** is the specification:
-language-independent, readable without any Swift, and enough to write an
-implementation from scratch. It carries the byte sequences, the flow-control
-algorithm, per-platform transport notes (CoreBluetooth, Web Bluetooth,
-Capacitor), a symptom-to-cause table and a minimal pseudocode implementation.
-
-`docs/PROTOCOLE.md` keeps the raw reverse-engineering notes in French. It
-documents, beyond the working commands:
-
-- **what the firmware does not honour** (`ESC t`, `GS ( k`, `GS k`, `GS B`,
-  non-ASCII characters), with the actual traces seen on paper;
-- **which commands were ported but never executed** — roughly twenty of
-  them, transcribed from the SDK without hardware verification;
-- **the pitfalls that look like firmware bugs** but come from the
-  implementation (line wrapping, flow control, paper mode).
-
-## To do
-
-- Compressed raster (`setCompress(true)` for the A2Y), to speed up large
-  jobs.
-- MTU negotiation up to 512 bytes; currently pinned at 180.
-- Grayscale printing (`getRealGrayLevel`).
-- Hardware verification of the ported but untested commands.
+Corrections to any claim in the specification are welcome. Several early
+diagnoses in this project turned out to be wrong, and are recorded as such.
 
 ## Licence
 
+MIT.
+
 Reverse engineering for interoperability, on legally acquired hardware. No
-code from the official SDK is redistributed: only the protocol byte sequences
-have been reimplemented.
+vendor code is redistributed: only protocol byte sequences — facts about a
+wire format — have been documented and reimplemented.

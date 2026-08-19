@@ -1,0 +1,32 @@
+{
+  "name": "pocketprinter5890",
+  "version": "1.0.0",
+  "description": "Drive the Lidl Tronic/SILVERCREST 5890 thermal pocket printer over Bluetooth, from the browser or from Capacitor",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "node --test dist/**/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "thermal-printer", "escpos", "bluetooth", "web-bluetooth",
+    "capacitor", "pocket-printer", "5890", "lidl", "tronic", "silvercrest"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/web-bluetooth": "^0.0.20"
+  },
+  "sideEffects": false
+}
