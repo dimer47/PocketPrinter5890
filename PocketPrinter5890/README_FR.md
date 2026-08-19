@@ -81,9 +81,10 @@ Plateformes: **macOS 10.15+**, **iOS 13+**, **iPadOS 13+**. Ces planchers sont
 fixes par `@Published` (Combine), qui n'existe pas avant. iPadOS se compile
 depuis les memes cibles iOS.
 
-`ReceiptRenderer`, qui dessine les tickets avec AppKit, n'est compile que sur
-macOS. Tout le reste — protocole, documents, codes-barres, QR codes,
-transport BLE — fonctionne sur les trois plateformes.
+Toute la librairie fonctionne sur les trois plateformes: protocole,
+documents, rendu de ticket, codes-barres, QR codes et transport BLE.
+`ReceiptRenderer` est ecrit sur CoreGraphics et CoreText plutot qu'AppKit
+pour cette raison.
 
 Deux produits:
 

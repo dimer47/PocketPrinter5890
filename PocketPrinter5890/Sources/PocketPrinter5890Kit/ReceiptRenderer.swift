@@ -1,8 +1,8 @@
-#if canImport(AppKit)
-import AppKit
+import CoreGraphics
+import CoreText
 import Foundation
 
-public enum ReceiptOrientation: String, CaseIterable, Identifiable {
+public enum ReceiptOrientation: String, CaseIterable, Identifiable, Sendable {
     case normal
     case rotated90
 
@@ -10,7 +10,7 @@ public enum ReceiptOrientation: String, CaseIterable, Identifiable {
     public var title: String { self == .normal ? "Normal" : "Rotation 90 deg" }
 }
 
-public enum DitherMode: String, CaseIterable, Identifiable {
+public enum DitherMode: String, CaseIterable, Identifiable, Sendable {
     case threshold
     case ordered
     case floydSteinberg
@@ -26,6 +26,13 @@ public enum DitherMode: String, CaseIterable, Identifiable {
     }
 }
 
+/// Rendu d'un ticket en bitmap monochrome.
+///
+/// Ecrit sur CoreGraphics et CoreText plutot qu'AppKit: le rendu fonctionne
+/// ainsi a l'identique sur macOS, iOS et iPadOS. Une version anterieure
+/// s'appuyait sur `NSImage`, ce qui restreignait la librairie a macOS et
+/// exposait a un piege: sur ecran Retina, `NSImage.cgImage` renvoie une image
+/// deux fois plus large en 64 bits par pixel, illisible telle quelle.
 public struct ReceiptRenderer {
     public var width: Int
     public var threshold: UInt8
@@ -58,184 +65,192 @@ public struct ReceiptRenderer {
 
     public func render(_ receipt: Receipt) throws -> MonochromeBitmap {
         let height = contentHeight(for: receipt)
-        let image = drawReceipt(receipt, size: CGSize(width: width, height: height))
-        return try bitmap(from: image, rotateClockwise: orientation == .rotated90)
+        let gray = try drawToGrayscale(width: width, height: height) { context in
+            drawReceipt(receipt, in: context, size: CGSize(width: width, height: height))
+        }
+        return try convert(gray: gray, width: width, height: height)
     }
 
-    public func previewImage(_ receipt: Receipt) -> NSImage {
-        drawReceipt(receipt, size: CGSize(width: width, height: contentHeight(for: receipt)))
+    /// Image de previsualisation, utilisable directement par l'interface.
+    public func previewImage(_ receipt: Receipt) throws -> CGImage {
+        let height = contentHeight(for: receipt)
+        return try drawToImage(width: width, height: height) { context in
+            drawReceipt(receipt, in: context, size: CGSize(width: width, height: height))
+        }
     }
 
     private func contentHeight(for receipt: Receipt) -> Int {
-        // En-tete + lignes d'articles + total + pied.
         90 + receipt.items.count * 22 + 80
     }
 
     // MARK: - Conversion d'image quelconque
 
-    /// Convertit une image arbitraire en bitmap a la largeur de l'imprimante,
-    /// en conservant les proportions.
-    public func bitmap(from image: NSImage) throws -> MonochromeBitmap {
-        let sourceSize = image.size
-        guard sourceSize.width > 0, sourceSize.height > 0 else {
+    /// Convertit une image en bitmap a la largeur d'impression, proportions
+    /// conservees.
+    public func bitmap(from image: CGImage) throws -> MonochromeBitmap {
+        guard image.width > 0, image.height > 0 else {
             throw RasterError.invalidDimensions
         }
-        let scale = CGFloat(width) / sourceSize.width
-        let targetHeight = max(1, Int((sourceSize.height * scale).rounded()))
+        let scale = Double(width) / Double(image.width)
+        let height = max(1, Int((Double(image.height) * scale).rounded()))
 
-        let canvas = NSImage(size: CGSize(width: width, height: targetHeight), flipped: true) { rect in
-            NSColor.white.setFill()
-            rect.fill()
-            image.draw(
-                in: rect,
-                from: NSRect(origin: .zero, size: sourceSize),
-                operation: .sourceOver,
-                fraction: 1
-            )
-            return true
+        let gray = try drawToGrayscale(width: width, height: height) { context in
+            context.interpolationQuality = .high
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         }
-        return try bitmap(from: canvas, rotateClockwise: false)
+        return try convert(gray: gray, width: width, height: height)
     }
 
     // MARK: - Mire
 
     public func testPattern(height: Int = 240) throws -> MonochromeBitmap {
-        let size = CGSize(width: width, height: height)
-        let image = NSImage(size: size, flipped: true) { _ in
-            self.drawTestPatternContents(size: size, height: height)
-            return true
+        let gray = try drawToGrayscale(width: width, height: height) { context in
+            drawTestPattern(in: context, height: height)
         }
-        return try bitmap(from: image, rotateClockwise: false)
-    }
-
-    private func drawTestPatternContents(size: CGSize, height: Int) {
-        NSColor.white.setFill()
-        NSRect(origin: .zero, size: size).fill()
-        NSColor.black.setStroke()
-        NSColor.black.setFill()
-
-        // Cadre: permet de verifier que toute la largeur est imprimee.
-        NSBezierPath(rect: NSRect(x: 0, y: 0, width: width - 1, height: height - 1)).stroke()
-
-        // Graduation tous les 8 px, reperes longs tous les 64 px.
-        for x in stride(from: 0, to: width, by: 8) {
-            let long = x % 64 == 0
-            NSBezierPath.strokeLine(
-                from: CGPoint(x: x, y: 0),
-                to: CGPoint(x: x, y: long ? 20 : 10)
-            )
-        }
-
-        // Damier de controle de densite, cantonne a la moitie gauche.
-        for y in 0..<6 {
-            for x in 0..<12 where (x + y).isMultiple(of: 2) {
-                NSRect(x: 10 + x * 6, y: 34 + y * 6, width: 6, height: 6).fill()
-            }
-        }
-
-        // Aplat plein: revele une largeur mal cadree.
-        NSRect(x: 0, y: height - 30, width: width, height: 12).fill()
-
-        // Libelle a droite du damier pour rester lisible.
-        draw("\(width) px", x: 250, y: 44, size: 15, bold: true)
-        draw("GAUCHE", x: 4, y: height - 52, size: 11)
-        draw("DROITE", x: width - 62, y: height - 52, size: 11)
+        return try convert(gray: gray, width: width, height: height)
     }
 
     // MARK: - Dessin
 
-    private func drawReceipt(_ receipt: Receipt, size: CGSize) -> NSImage {
-        // `flipped: true` place l'origine en haut a gauche, ce qui correspond
-        // a l'ordre des lignes attendu par l'imprimante et rend le code de
-        // mise en page lisible de haut en bas.
-        let image = NSImage(size: size, flipped: true) { _ in
-            self.drawReceiptContents(receipt, size: size)
-            return true
-        }
-        return image
-    }
-
-    private func drawReceiptContents(_ receipt: Receipt, size: CGSize) {
-        NSColor.white.setFill()
-        NSRect(origin: .zero, size: size).fill()
-        NSColor.black.setStroke()
-
+    private func drawReceipt(_ receipt: Receipt, in context: CGContext, size: CGSize) {
         let margin: CGFloat = 8
         let right = size.width - margin
         var y: CGFloat = 10
 
-        drawCentered(receipt.merchantName.uppercased(), y: y, size: 22, width: size.width, bold: true)
+        drawText(receipt.merchantName.uppercased(), in: context,
+                 at: .center(size.width), y: y, size: 22, bold: true)
         y += 30
-        drawCentered(receipt.address, y: y, size: 12, width: size.width)
+        drawText(receipt.address, in: context, at: .center(size.width), y: y, size: 12)
         y += 18
-        drawCentered(Self.dateFormatter.string(from: receipt.date), y: y, size: 12, width: size.width)
+        drawText(Self.dateFormatter.string(from: receipt.date), in: context,
+                 at: .center(size.width), y: y, size: 12)
         y += 22
 
-        strokeLine(from: margin, to: right, y: y)
+        strokeLine(in: context, from: margin, to: right, y: y)
         y += 10
 
         for item in receipt.items {
-            let label = "\(item.quantity)x \(item.name)"
-            draw(label, x: Int(margin), y: Int(y), size: 13)
-            drawRightAligned(Self.money(item.total), right: right, y: y, size: 13)
+            drawText("\(item.quantity)x \(item.name)", in: context, at: .left(margin), y: y, size: 13)
+            drawText(Self.money(item.total), in: context, at: .right(right), y: y, size: 13)
             y += 20
         }
 
         y += 4
-        strokeLine(from: margin, to: right, y: y)
+        strokeLine(in: context, from: margin, to: right, y: y)
         y += 10
 
-        draw("TOTAL", x: Int(margin), y: Int(y), size: 17, bold: true)
-        drawRightAligned(Self.money(receipt.total), right: right, y: y, size: 17, bold: true)
+        drawText("TOTAL", in: context, at: .left(margin), y: y, size: 17, bold: true)
+        drawText(Self.money(receipt.total), in: context, at: .right(right), y: y, size: 17, bold: true)
         y += 32
 
-        drawCentered(receipt.footer, y: y, size: 13, width: size.width)
+        drawText(receipt.footer, in: context, at: .center(size.width), y: y, size: 13)
     }
 
-    private func strokeLine(from x1: CGFloat, to x2: CGFloat, y: CGFloat) {
-        NSBezierPath.strokeLine(from: CGPoint(x: x1, y: y), to: CGPoint(x: x2, y: y))
-    }
+    private func drawTestPattern(in context: CGContext, height: Int) {
+        let width = CGFloat(self.width)
+        context.setStrokeColor(gray: 0, alpha: 1)
+        context.setFillColor(gray: 0, alpha: 1)
+        context.setLineWidth(1)
 
-    private func draw(_ text: String, x: Int, y: Int, size: CGFloat, bold: Bool = false) {
-        text.draw(at: CGPoint(x: x, y: y), withAttributes: Self.attributes(size: size, bold: bold))
-    }
+        // Cadre: verifie que toute la largeur est imprimee.
+        context.stroke(CGRect(x: 0.5, y: 0.5, width: width - 1, height: CGFloat(height) - 1))
 
-    private func drawCentered(_ text: String, y: CGFloat, size: CGFloat, width: CGFloat, bold: Bool = false) {
-        let attributes = Self.attributes(size: size, bold: bold)
-        let textWidth = (text as NSString).size(withAttributes: attributes).width
-        text.draw(at: CGPoint(x: (width - textWidth) / 2, y: y), withAttributes: attributes)
-    }
-
-    private func drawRightAligned(_ text: String, right: CGFloat, y: CGFloat, size: CGFloat, bold: Bool = false) {
-        let attributes = Self.attributes(size: size, bold: bold)
-        let textWidth = (text as NSString).size(withAttributes: attributes).width
-        text.draw(at: CGPoint(x: right - textWidth, y: y), withAttributes: attributes)
-    }
-
-    private static func attributes(size: CGFloat, bold: Bool) -> [NSAttributedString.Key: Any] {
-        [
-            .font: NSFont.monospacedSystemFont(ofSize: size, weight: bold ? .bold : .regular),
-            .foregroundColor: NSColor.black
-        ]
-    }
-
-    // MARK: - Conversion en bitmap
-
-    private func bitmap(from image: NSImage, rotateClockwise: Bool) throws -> MonochromeBitmap {
-        let width = Int(image.size.width.rounded())
-        let height = Int(image.size.height.rounded())
-        guard width > 0, height > 0 else {
-            throw RasterError.invalidDimensions
+        // Graduation, reperes longs tous les 64 px.
+        for x in stride(from: 0, to: self.width, by: 8) {
+            let long = x % 64 == 0
+            context.move(to: CGPoint(x: CGFloat(x), y: 0))
+            context.addLine(to: CGPoint(x: CGFloat(x), y: long ? 20 : 10))
+            context.strokePath()
         }
 
-        // On dessine dans un contexte 8 bits par canal que l'on maitrise
-        // entierement, au lieu de passer par le CGImage de la NSImage.
-        // Sur un ecran Retina/HDR ce dernier revient en 768 px de large et
-        // 64 bits par pixel: relire ces octets comme du RGBA8 produisait une
-        // image entierement noire.
-        var gray = [UInt8](repeating: 255, count: width * height)
-        let bytesPerRow = width * 4
-        var pixels = [UInt8](repeating: 255, count: bytesPerRow * height)
+        // Damier de controle de densite.
+        for row in 0..<6 {
+            for column in 0..<12 where (row + column).isMultiple(of: 2) {
+                context.fill(CGRect(x: 10 + column * 6, y: 34 + row * 6, width: 6, height: 6))
+            }
+        }
+
+        // Aplat plein: revele une largeur mal cadree.
+        context.fill(CGRect(x: 0, y: height - 30, width: Int(width), height: 12))
+
+        drawText("\(self.width) px", in: context, at: .left(250), y: 44, size: 15, bold: true)
+        drawText("GAUCHE", in: context, at: .left(4), y: CGFloat(height) - 52, size: 11)
+        drawText("DROITE", in: context, at: .right(width - 4), y: CGFloat(height) - 52, size: 11)
+    }
+
+    // MARK: - Primitives de dessin
+
+    private enum Anchor {
+        case left(CGFloat)
+        case right(CGFloat)
+        case center(CGFloat)
+    }
+
+    private func strokeLine(in context: CGContext, from x1: CGFloat, to x2: CGFloat, y: CGFloat) {
+        context.setStrokeColor(gray: 0, alpha: 1)
+        context.setLineWidth(1)
+        context.move(to: CGPoint(x: x1, y: y))
+        context.addLine(to: CGPoint(x: x2, y: y))
+        context.strokePath()
+    }
+
+    private func drawText(
+        _ text: String,
+        in context: CGContext,
+        at anchor: Anchor,
+        y: CGFloat,
+        size: CGFloat,
+        bold: Bool = false
+    ) {
+        // Police a chasse fixe: les colonnes d'un ticket doivent s'aligner.
+        let font = CTFontCreateWithName(
+            (bold ? "Menlo-Bold" : "Menlo-Regular") as CFString,
+            size,
+            nil
+        )
+        // Cles CoreText plutot qu'AppKit/UIKit: elles existent sur toutes
+        // les plateformes.
+        let attributes: [CFString: Any] = [
+            kCTFontAttributeName: font,
+            kCTForegroundColorAttributeName: CGColor(gray: 0, alpha: 1)
+        ]
+        let attributed = CFAttributedStringCreate(
+            kCFAllocatorDefault,
+            text as CFString,
+            attributes as CFDictionary
+        )
+        guard let attributed else { return }
+        let line = CTLineCreateWithAttributedString(attributed)
+        let bounds = CTLineGetBoundsWithOptions(line, .useOpticalBounds)
+
+        let x: CGFloat
+        switch anchor {
+        case .left(let value): x = value
+        case .right(let value): x = value - bounds.width
+        case .center(let total): x = (total - bounds.width) / 2
+        }
+
+        // Le contexte est retourne pour que la mise en page se lise de haut
+        // en bas; CoreText dessinerait alors le texte en miroir. On annule
+        // le retournement localement, le temps de tracer la ligne.
+        context.saveGState()
+        context.translateBy(x: 0, y: y + bounds.height)
+        context.scaleBy(x: 1, y: -1)
+        context.textPosition = CGPoint(x: x, y: 0)
+        CTLineDraw(line, context)
+        context.restoreGState()
+    }
+
+    // MARK: - Contexte graphique
+
+    /// Dessine dans un contexte 8 bits par canal et renvoie les niveaux de gris.
+    private func drawToGrayscale(
+        width: Int,
+        height: Int,
+        _ draw: (CGContext) -> Void
+    ) throws -> [UInt8] {
+        guard width > 0, height > 0 else { throw RasterError.invalidDimensions }
+        var pixels = [UInt8](repeating: 255, count: width * height)
 
         try pixels.withUnsafeMutableBytes { buffer in
             guard let context = CGContext(
@@ -243,61 +258,67 @@ public struct ReceiptRenderer {
                 width: width,
                 height: height,
                 bitsPerComponent: 8,
-                bytesPerRow: bytesPerRow,
-                space: CGColorSpaceCreateDeviceRGB(),
-                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                bytesPerRow: width,
+                space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: CGImageAlphaInfo.none.rawValue
             ) else {
                 throw RasterError.invalidDimensions
             }
-
-            context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+            context.setFillColor(gray: 1, alpha: 1)
             context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-            context.interpolationQuality = .high
 
-            // Le dessin passe par le contexte AppKit adosse a notre CGContext,
-            // ce qui evite tout aller-retour par une representation Retina.
-            //
-            // CoreGraphics place son origine en bas a gauche alors que
-            // l'imprimante attend la premiere ligne raster en haut. Sans ce
-            // retournement, le ticket sortait la tete en bas.
-            let graphicsContext = NSGraphicsContext(cgContext: context, flipped: true)
-            NSGraphicsContext.saveGraphicsState()
-            NSGraphicsContext.current = graphicsContext
-            image.draw(
-                in: NSRect(x: 0, y: 0, width: width, height: height),
-                from: NSRect(origin: .zero, size: image.size),
-                operation: .sourceOver,
-                fraction: 1
-            )
-            NSGraphicsContext.restoreGraphicsState()
+            // CoreGraphics place son origine en bas a gauche; l'imprimante
+            // attend la premiere ligne en haut. On retourne le repere pour
+            // que le code de mise en page se lise de haut en bas.
+            context.translateBy(x: 0, y: CGFloat(height))
+            context.scaleBy(x: 1, y: -1)
+            draw(context)
         }
+        return pixels
+    }
 
-        for y in 0..<height {
-            for x in 0..<width {
-                let offset = y * bytesPerRow + x * 4
-                let red = Int(pixels[offset])
-                let green = Int(pixels[offset + 1])
-                let blue = Int(pixels[offset + 2])
-                gray[y * width + x] = UInt8((red * 299 + green * 587 + blue * 114) / 1000)
-            }
+    private func drawToImage(
+        width: Int,
+        height: Int,
+        _ draw: (CGContext) -> Void
+    ) throws -> CGImage {
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceGray(),
+            bitmapInfo: CGImageAlphaInfo.none.rawValue
+        ) else {
+            throw RasterError.invalidDimensions
         }
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        draw(context)
 
-        if rotateClockwise {
-            var rotated = [UInt8](repeating: 255, count: width * height)
-            let rotatedWidth = height
-            let rotatedHeight = width
-            for y in 0..<height {
-                for x in 0..<width {
-                    rotated[x * rotatedWidth + (height - 1 - y)] = gray[y * width + x]
-                }
-            }
-            return try convert(gray: rotated, width: rotatedWidth, height: rotatedHeight)
+        guard let image = context.makeImage() else {
+            throw RasterError.invalidDimensions
         }
-
-        return try convert(gray: gray, width: width, height: height)
+        return image
     }
 
     private func convert(gray: [UInt8], width: Int, height: Int) throws -> MonochromeBitmap {
+        if orientation == .rotated90 {
+            var rotated = [UInt8](repeating: 255, count: width * height)
+            for y in 0..<height {
+                for x in 0..<width {
+                    rotated[x * height + (height - 1 - y)] = gray[y * width + x]
+                }
+            }
+            return try binarise(gray: rotated, width: height, height: width)
+        }
+        return try binarise(gray: gray, width: width, height: height)
+    }
+
+    private func binarise(gray: [UInt8], width: Int, height: Int) throws -> MonochromeBitmap {
         switch ditherMode {
         case .threshold:
             return try MonochromeConverter.threshold(
@@ -325,4 +346,3 @@ public struct ReceiptRenderer {
         return formatter.string(from: value as NSDecimalNumber) ?? "\(value)"
     }
 }
-#endif

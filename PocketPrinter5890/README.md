@@ -80,9 +80,9 @@ Platforms: **macOS 10.15+**, **iOS 13+**, **iPadOS 13+**. Those floors are set
 by `@Published` (Combine), which does not exist before. iPadOS builds from the
 same iOS targets.
 
-`ReceiptRenderer`, which draws receipts with AppKit, is compiled on macOS
-only. Everything else — protocol, documents, barcodes, QR codes, BLE
-transport — works on all three platforms.
+The whole library works on all three platforms: protocol, documents,
+receipt rendering, barcodes, QR codes and BLE transport. `ReceiptRenderer`
+is written on CoreGraphics and CoreText rather than AppKit for that reason.
 
 Two products:
 

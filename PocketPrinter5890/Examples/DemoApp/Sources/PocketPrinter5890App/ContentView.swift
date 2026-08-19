@@ -424,7 +424,10 @@ private struct ReceiptPreview: View {
     }
 
     private var renderedImage: NSImage? {
-        ReceiptRenderer(width: width).previewImage(receipt)
+        guard let cgImage = try? ReceiptRenderer(width: width).previewImage(receipt) else {
+            return nil
+        }
+        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
     }
 }
 
