@@ -146,10 +146,25 @@ class MyTransport implements Transport {
 Flow control, chunking and the activation sequence are handled above this
 layer.
 
+## Receipts
+
+```ts
+import { renderReceipt, sampleReceipt } from 'pocketprinter5890';
+
+const bitmap = renderReceipt({ ...sampleReceipt, merchantName: 'BAKERY' });
+await printer.printBitmap(bitmap);
+```
+
+Receipts are drawn on a canvas and printed as an image, which sidesteps the
+firmware's ASCII-only text mode: accents, symbols and any web font come out
+correctly.
+
 ## Demo
 
-`demo/index.html` is a self-contained page for Chrome: connection, device
-information, text, images, barcodes and a hex console.
+`demo/index.html` is a self-contained page for Chrome, matching what the
+macOS and iOS apps offer: connection with battery and firmware, receipt
+editor with live preview, native text, barcodes, QR codes, images, demo
+documents, printer settings and a hex console.
 
 ```bash
 npm run build
@@ -165,9 +180,13 @@ npm run build
 
 ## Status
 
-Protocol, raster encoding, ESC/POS, barcodes, canvas rendering and both
-transports are implemented and the byte output has been checked against the
-Swift reference implementation.
+Protocol, raster encoding, ESC/POS, barcodes, receipt rendering, canvas
+rendering and both transports are implemented, and the byte output has been
+checked against the Swift reference implementation.
+
+Two things the browser cannot do, whatever the implementation: listing nearby
+devices with their signal strength, and choosing an alternative BLE service.
+The Web Bluetooth API imposes its own device chooser and exposes neither.
 
 Printing has been verified from Chrome on real hardware: text, barcodes and
 images all come out. The Capacitor adapter has not been run on a device.

@@ -99,8 +99,9 @@ exposes no text or code printing at all, only bitmaps.
 |---|---|---|
 | Protocol, raster, ESC/POS | ✅ | ✅ |
 | Barcodes (Code 128/39, EAN-13/8) | ✅ | ✅ |
-| QR codes | ✅ CoreImage | ⚠️ bring your own encoder |
+| QR codes | ✅ CoreImage | ✅ via `qrcode-generator` |
 | Receipt rendering | ✅ CoreGraphics | ✅ Canvas |
+| Demo app feature parity | ✅ macOS, iOS | ✅ browser |
 | Printing verified on hardware | ✅ macOS + iPhone | ✅ Chrome |
 
 Roughly twenty commands were transcribed from the vendor SDK but never

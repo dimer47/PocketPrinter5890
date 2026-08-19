@@ -106,6 +106,49 @@ export function typographySampler(): PrintDocument {
 }
 
 /**
+ * Code page probe.
+ *
+ * Prints the same accented bytes after each `ESC t` variant. On this
+ * firmware all nine lines come out identical and unreadable, which is how
+ * the limitation was established: the command is ignored.
+ *
+ * Kept as a diagnostic for other models, which may behave differently.
+ */
+export function codePageProbe(): PrintDocument {
+  const document = new PrintDocument();
+
+  document.text('CODE PAGE PROBE', { bold: true, alignment: Alignment.Center });
+  document.separator('=');
+  document.text('ASCII reference:');
+  document.text('degre C, aout, ete');
+  document.separator('-');
+
+  const pages: Array<[number, string]> = [
+    [0, 'PC437 (USA)'],
+    [1, 'Katakana'],
+    [2, 'PC850 (multilingual)'],
+    [3, 'PC860 (Portuguese)'],
+    [4, 'PC863 (Canadian)'],
+    [5, 'PC865 (Nordic)'],
+    [6, 'Western Europe'],
+    [19, 'PC858 (euro)'],
+    [16, 'WPC1252'],
+  ];
+
+  for (const [page, label] of pages) {
+    document.raw([0x1b, 0x74, page]);
+    // The label goes through untouched: transliteration would defeat the test.
+    document.raw([...Array.from(`${page}: ${label}`).map((c) => c.charCodeAt(0)), 0x0a]);
+    // `° é è à û ç` in their CP1252 values.
+    document.raw([0xb0, 0x20, 0xe9, 0x20, 0xe8, 0x20, 0xe0, 0x20, 0xfb, 0x20, 0xe7, 0x0a]);
+  }
+
+  document.separator('=');
+  document.centered('A correct line names the right table');
+  return document;
+}
+
+/**
  * Alignment pattern.
  *
  * The frame must span the full paper width; a wide blank margin on one side

@@ -53,6 +53,20 @@ export class PocketPrinter {
     return this.transport.isConnected;
   }
 
+  /**
+   * Bytes per BLE write.
+   *
+   * The vendor app negotiates an MTU up to 512; 180 is reliable. Lowering it
+   * to 20, the BLE minimum, works but is very slow.
+   */
+  get transportChunkSize(): number {
+    return this.transport.maxChunkSize;
+  }
+
+  set transportChunkSize(value: number) {
+    this.transport.maxChunkSize = value;
+  }
+
   /** Whether credit-based pacing is applied. Disable only for comparison. */
   get useFlowControl(): boolean {
     return this.flow.enabled;

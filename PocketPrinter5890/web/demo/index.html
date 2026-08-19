@@ -107,11 +107,41 @@ This is a native text test.</textarea>
 </fieldset>
 
 <fieldset>
+  <legend>Receipt</legend>
+  <div class="row">
+    <input id="merchant" class="grow" value="LIDL TEST" placeholder="Merchant">
+    <input id="address" class="grow" value="Ticket 58 mm - 384 px" placeholder="Address">
+  </div>
+  <table id="items" style="width:100%;margin-top:0.5rem;border-collapse:collapse"></table>
+  <div class="row" style="margin-top:0.5rem">
+    <button id="addItem">Add item</button>
+    <button id="resetItems">Reset</button>
+    <input id="footer" class="grow" value="Merci" placeholder="Footer">
+    <button id="printReceipt" class="primary" disabled>Print receipt</button>
+  </div>
+  <canvas id="receiptPreview" style="margin-top:0.6rem"></canvas>
+</fieldset>
+
+<fieldset>
+  <legend>QR code</legend>
+  <div class="row">
+    <input id="qrContent" class="grow" value="https://example.com">
+    <button id="printQR" disabled>Print QR</button>
+  </div>
+  <p style="font-size:0.85rem;color:#888;margin:0.4rem 0 0">
+    Uses <code>qrcode-generator</code> from a CDN: this library ships no QR
+    encoder, a wrong QR code being indistinguishable by eye.
+  </p>
+  <canvas id="qrPreview" style="margin-top:0.6rem"></canvas>
+</fieldset>
+
+<fieldset>
   <legend>Demos</legend>
   <div class="row">
     <button id="demoWeather" disabled>Weather + horoscope</button>
     <button id="demoTypography" disabled>Typography sampler</button>
     <button id="demoPattern" disabled>Test pattern</button>
+    <button id="demoCodePages" disabled>Code page probe</button>
   </div>
 </fieldset>
 
@@ -131,11 +161,65 @@ This is a native text test.</textarea>
         <option value="label">Labels</option>
       </select>
     </label>
+    <label style="width:auto">Width
+      <select id="width" style="width:auto">
+        <option value="384" selected>58 mm — 384 px</option>
+        <option value="576">80 mm — 576 px</option>
+        <option value="96">Label 14 mm — 96 px</option>
+      </select>
+    </label>
+    <label style="width:auto">Dither
+      <select id="dither" style="width:auto">
+        <option value="floyd-steinberg" selected>Floyd-Steinberg</option>
+        <option value="ordered">Ordered</option>
+        <option value="threshold">Threshold</option>
+      </select>
+    </label>
     <button id="readSettings" disabled>Read settings</button>
+    <button id="checkPaper" disabled>Check paper</button>
   </div>
   <div class="row" style="margin-top:0.5rem">
     <label class="grow">Clearance feed: <span id="feedValue">80</span> dots
       <input type="range" id="feedDots" min="0" max="1200" step="10" value="80">
+    </label>
+  </div>
+  <div class="row" id="labelRow" hidden>
+    <label class="grow">Label length: <span id="labelValue">32</span>
+      <input type="range" id="labelLength" min="8" max="255" step="1" value="32">
+    </label>
+  </div>
+  <div class="row">
+    <label class="grow">Threshold: <span id="thresholdValue">128</span>
+      <input type="range" id="threshold" min="64" max="224" step="1" value="128">
+    </label>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Printer settings</legend>
+  <div class="row">
+    <label class="grow">Auto power-off: <span id="shutdownValue">15</span> min
+      <input type="range" id="shutdown" min="0" max="240" step="5" value="15">
+    </label>
+    <button id="applyShutdown" disabled>Apply</button>
+  </div>
+  <p style="font-size:0.85rem;color:#888;margin:0.4rem 0 0">
+    0 disables power-off if the firmware accepts it — untested value. Read the
+    settings back to see what was stored.
+  </p>
+</fieldset>
+
+<fieldset>
+  <legend>BLE transport</legend>
+  <div class="row">
+    <label style="width:auto">
+      <input type="checkbox" id="flowControl" checked style="width:auto">
+      Credit-based flow control
+    </label>
+  </div>
+  <div class="row" style="margin-top:0.5rem">
+    <label class="grow">Packet size: <span id="chunkValue">180</span> bytes
+      <input type="range" id="chunkSize" min="20" max="500" step="10" value="180">
     </label>
   </div>
 </fieldset>
@@ -158,8 +242,13 @@ import {
   PocketPrinter, WebBluetoothTransport, PrintDocument,
   renderBarcode, Symbology, bitmapFromImage, bitmapToCanvas,
   toHex, Alignment, DitherMode, PaperMode,
-  weatherAndHoroscope, typographySampler, testPattern,
+  weatherAndHoroscope, typographySampler, testPattern, codePageProbe,
+  drawReceipt, renderReceipt, sampleReceipt, renderQR,
 } from '../dist/index.js';
+
+// Chargé depuis un CDN: cette librairie ne fournit volontairement pas
+// d'encodeur QR, un code invalide etant indiscernable a l'oeil.
+const qrcode = (await import('https://esm.sh/qrcode-generator@1.4.4')).default;
 
 const $ = (id) => document.getElementById(id);
 const log = (kind, text) => {
@@ -199,7 +288,8 @@ const printer = new PocketPrinter(new WebBluetoothTransport(), {}, {
 const setConnected = (connected) => {
   const ids = ['disconnect','info','printText','printCode','printImage',
                'feed','feedLong','demoWeather','demoTypography','demoPattern',
-               'readSettings'];
+               'demoCodePages','readSettings','printReceipt','printQR',
+               'applyShutdown','checkPaper'];
   for (const id of ids) $(id).disabled = !connected;
   $('connect').disabled = connected;
   if (!connected) $('deviceBar').hidden = true;
@@ -293,7 +383,150 @@ const currentOptions = () => ({
   density: Number($('density').value),
   paperMode: $('paperMode').value,
   trailingFeedDots: Number($('feedDots').value),
+  width: Number($('width').value),
+  labelLength: Number($('labelLength').value),
 });
+
+const renderOptions = () => ({
+  printWidth: Number($('width').value),
+  dither: $('dither').value,
+  level: Number($('threshold').value),
+});
+
+// --- Curseurs
+const bindSlider = (id, valueId, onChange) => {
+  $(id).oninput = () => {
+    $(valueId).textContent = $(id).value;
+    onChange?.();
+  };
+};
+bindSlider('feedDots', 'feedValue');
+bindSlider('labelLength', 'labelValue');
+bindSlider('threshold', 'thresholdValue', () => updateReceiptPreview());
+bindSlider('shutdown', 'shutdownValue');
+bindSlider('chunkSize', 'chunkValue', () => {
+  printer.transportChunkSize = Number($('chunkSize').value);
+});
+
+$('paperMode').onchange = () => {
+  $('labelRow').hidden = $('paperMode').value !== 'label';
+};
+$('width').onchange = () => updateReceiptPreview();
+$('dither').onchange = () => updateReceiptPreview();
+$('flowControl').onchange = () => { printer.useFlowControl = $('flowControl').checked; };
+
+$('applyShutdown').onclick = async () => {
+  await printer.setAutoShutdown(Number($('shutdown').value));
+  log('tx', `TX  auto power-off ${$('shutdown').value} min`);
+};
+$('checkPaper').onclick = () => printer.sendCommand([0x10, 0xff, 0x40]);
+
+// --- Editeur de ticket
+let receipt = structuredClone(sampleReceipt);
+receipt.date = new Date();
+
+const renderItems = () => {
+  const table = $('items');
+  table.innerHTML = '';
+  receipt.items.forEach((item, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input value="${item.name}" data-field="name" data-index="${index}"></td>
+      <td style="width:5rem"><input type="number" value="${item.quantity}" min="1"
+          data-field="quantity" data-index="${index}"></td>
+      <td style="width:6.5rem"><input type="number" value="${item.unitPrice}" step="0.01"
+          data-field="unitPrice" data-index="${index}"></td>
+      <td style="width:2rem"><button data-remove="${index}">&times;</button></td>`;
+    table.appendChild(row);
+  });
+
+  table.querySelectorAll('input').forEach((input) => {
+    input.oninput = () => {
+      const index = Number(input.dataset.index);
+      const field = input.dataset.field;
+      receipt.items[index][field] =
+        field === 'name' ? input.value : Number(input.value);
+      updateReceiptPreview();
+    };
+  });
+  table.querySelectorAll('button[data-remove]').forEach((button) => {
+    button.onclick = () => {
+      receipt.items.splice(Number(button.dataset.remove), 1);
+      renderItems();
+      updateReceiptPreview();
+    };
+  });
+};
+
+const updateReceiptPreview = () => {
+  receipt.merchantName = $('merchant').value;
+  receipt.address = $('address').value;
+  receipt.footer = $('footer').value;
+  try {
+    const canvas = drawReceipt(receipt, renderOptions());
+    const target = $('receiptPreview');
+    target.width = canvas.width;
+    target.height = canvas.height;
+    target.getContext('2d').drawImage(canvas, 0, 0);
+  } catch (error) {
+    log('err', error.message);
+  }
+};
+
+for (const id of ['merchant', 'address', 'footer']) {
+  $(id).oninput = updateReceiptPreview;
+}
+$('addItem').onclick = () => {
+  receipt.items.push({ name: 'Article', quantity: 1, unitPrice: 1 });
+  renderItems();
+  updateReceiptPreview();
+};
+$('resetItems').onclick = () => {
+  receipt = structuredClone(sampleReceipt);
+  receipt.date = new Date();
+  $('merchant').value = receipt.merchantName;
+  $('address').value = receipt.address;
+  $('footer').value = receipt.footer;
+  renderItems();
+  updateReceiptPreview();
+};
+$('printReceipt').onclick = async () => {
+  const bitmap = renderReceipt(receipt, renderOptions());
+  await printer.printBitmap(bitmap, currentOptions());
+  log('tx', 'TX  receipt');
+};
+renderItems();
+updateReceiptPreview();
+
+// --- QR code
+const buildQR = () => {
+  const qr = qrcode(0, 'M');
+  qr.addData($('qrContent').value);
+  qr.make();
+  return renderQR(
+    { size: qr.getModuleCount(), isDark: (x, y) => qr.isDark(y, x) },
+    { printWidth: Number($('width').value) },
+  );
+};
+
+const updateQRPreview = () => {
+  try {
+    const canvas = bitmapToCanvas(buildQR());
+    const target = $('qrPreview');
+    target.width = canvas.width;
+    target.height = canvas.height;
+    target.getContext('2d').drawImage(canvas, 0, 0);
+  } catch (error) {
+    log('err', error.message);
+  }
+};
+$('qrContent').oninput = updateQRPreview;
+updateQRPreview();
+
+$('printQR').onclick = async () => {
+  await printer.printBitmap(buildQR(), currentOptions());
+  log('tx', 'TX  QR code');
+};
 
 $('feedDots').oninput = () => { $('feedValue').textContent = $('feedDots').value; };
 $('density').onchange = () => printer.setDensity(Number($('density').value));
@@ -309,8 +542,12 @@ $('demoTypography').onclick = async () => {
   log('tx', 'TX  typography sampler');
 };
 $('demoPattern').onclick = async () => {
-  await printer.printBitmap(testPattern(), currentOptions());
+  await printer.printBitmap(testPattern(Number($('width').value)), currentOptions());
   log('tx', 'TX  test pattern');
+};
+$('demoCodePages').onclick = async () => {
+  await printer.print(codePageProbe(), currentOptions());
+  log('tx', 'TX  code page probe');
 };
 
 $('feed').onclick = () => printer.feed(80);

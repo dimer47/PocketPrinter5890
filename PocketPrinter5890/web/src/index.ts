@@ -38,7 +38,7 @@ export {
 export { columnsFor, wrap, columns } from './protocol/text-layout.js';
 
 // Demonstration documents
-export { weatherAndHoroscope, typographySampler, testPattern } from './demos.js';
+export { weatherAndHoroscope, typographySampler, testPattern, codePageProbe } from './demos.js';
 
 // Rendering
 export {
@@ -49,6 +49,15 @@ export {
   type CodeOptions,
 } from './render/codes.js';
 export { barcodePattern, eanCheckDigit } from './render/barcode.js';
+export {
+  drawReceipt,
+  renderReceipt,
+  receiptTotal,
+  sampleReceipt,
+  type Receipt,
+  type ReceiptItem,
+  type ReceiptRenderOptions,
+} from './render/receipt.js';
 export {
   bitmapFromCanvas,
   bitmapFromImage,
