@@ -1,0 +1,100 @@
+/* Titre et en-tete */
+"app.title" = "Imprimante de poche 5890";
+"app.subtitle" = "Mini imprimante de poche 58 mm - 384 px, modele A2Y.";
+
+/* Connexion */
+"scan.start" = "Rechercher";
+"scan.stop" = "Arreter";
+"device.disconnect" = "Deconnecter";
+"device.filter" = "Afficher seulement les imprimantes probables";
+"device.candidate" = "Candidat imprimante";
+"ble.channel" = "Canal BLE";
+"ble.automatic" = "Automatique (FF00 d'abord)";
+"gatt.title" = "GATT retenu";
+"battery.loading" = "Batterie...";
+
+/* Informations */
+"info.read" = "Lire modele / firmware / batterie / papier";
+"paper.check" = "Verifier papier seulement";
+
+/* Reglages */
+"settings.width" = "Largeur";
+"settings.density" = "Densite";
+"settings.paper" = "Papier";
+"settings.dither" = "Tramage";
+"settings.creditFlow" = "Controle de flux par credits";
+"settings.threshold" = "Seuil noir/blanc %d";
+"settings.packet" = "Paquet BLE %d octets";
+"settings.feed" = "Degagement papier %d points (~%d mm)";
+"settings.labelLength" = "Longueur d'etiquette %d";
+
+/* Impression */
+"print.receipt" = "Imprimer le ticket";
+"print.pattern" = "Imprimer une mire";
+"print.text" = "Imprimer ce texte";
+"print.clearPaper" = "Degager le papier (%d points)";
+"demo.weather" = "Demo meteo + horoscope";
+"demo.typography" = "Nuancier typographique";
+
+/* Editeur */
+"editor.title" = "Ticket de test";
+"editor.merchant" = "Commerce";
+"editor.address" = "Adresse";
+"editor.date" = "Date";
+"editor.items" = "Articles";
+"editor.item" = "Article";
+"editor.price" = "Prix";
+"editor.footer" = "Pied de ticket";
+"editor.add" = "Ajouter";
+"editor.remove" = "Retirer";
+"editor.reset" = "Reinitialiser";
+
+/* Texte natif */
+"text.native" = "Texte natif (sans rasterisation)";
+"text.sample" = "BONJOUR\nCeci est un test de texte natif.";
+"text.bold" = "Gras";
+"text.size" = "Taille %d";
+
+/* Apercu et console */
+"preview.title" = "Apercu monochrome %d px, longueur variable";
+"console.title" = "Console hex RX/TX";
+
+/* Erreurs */
+"error.render" = "Erreur rendu: %@";
+"error.pattern" = "Erreur mire: %@";
+
+/* Langue */
+"menu.language" = "Langue";
+"language.system" = "Systeme";
+
+/* Extinction automatique */
+"shutdown.delay" = "Extinction auto: %d min";
+"shutdown.disabled" = "Extinction auto: desactivee";
+"shutdown.apply" = "Appliquer";
+"shutdown.hint" = "0 desactive l%@extinction, si le firmware l%@accepte. Valeur non testee.";
+"settings.read" = "Lire les reglages actuels";
+
+/* Onglets en fenetre etroite */
+"tab.editor" = "Ticket";
+"tab.preview" = "Apercu";
+
+/* Onglets et sections iOS */
+"tab.connection" = "Connexion";
+"tab.receipt" = "Ticket";
+"tab.tools" = "Impression";
+"tab.settings" = "Reglages";
+"tab.console" = "Console";
+"devices.found" = "Peripheriques trouves";
+"devices.none" = "Aucun peripherique. Touchez Rechercher.";
+"preview.section" = "Apercu";
+"codes.section" = "Codes-barres et QR codes";
+"codes.content" = "Contenu";
+"codes.qr" = "Imprimer un QR code";
+"codes.barcode" = "Imprimer un code-barres (Code 128)";
+"codes.invalid" = "Contenu non supporte par Code 128 (ASCII uniquement)";
+"demos.section" = "Demonstrations";
+"demo.codePages" = "Mire de pages de code";
+"settings.print" = "Impression";
+"settings.transport" = "Transport BLE";
+"settings.device" = "Reglages imprimante";
+"settings.alignment" = "Alignement";

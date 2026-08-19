@@ -238,6 +238,15 @@ L'interface suit la langue du systeme (francais ou anglais) et un menu
 **Langue** permet de basculer, ce qui rend les deux traductions verifiables
 sans toucher aux reglages du systeme.
 
+`Examples/DemoAppIOS` en est le pendant iOS et iPadOS, organise en cinq
+onglets — connexion, ticket, impression, reglages, console — avec les memes
+fonctions adaptees au tactile.
+
+> L'application iOS compile pour appareil et simulateur, mais le simulateur
+> n'a pas de Bluetooth: seul un iPhone ou un iPad reel peut dialoguer avec
+> l'imprimante. L'execution sur materiel demande de choisir une equipe de
+> developpement dans Xcode.
+
 ## Structure du depot
 
 ```text
@@ -246,6 +255,7 @@ Sources/PocketPrinter5890BLE/    transport CoreBluetooth
 Sources/PocketPrinter5890Probe/  outil console de diagnostic
 Tests/                           89 tests unitaires
 Examples/DemoApp/                application macOS SwiftUI de demonstration
+Examples/DemoAppIOS/             application iOS et iPadOS de demonstration
 docs/PROTOCOLE.md                notes detaillees de retro-ingenierie
 ```
 
