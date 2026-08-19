@@ -277,6 +277,18 @@ Volontairement non portee: la mise a jour du firmware
 (`updatePrinterLuck`). Un portage non teste qui echoue en cours d'ecriture
 rendrait l'imprimante inutilisable.
 
+## Reimplementer dans un autre langage
+
+`docs/PROTOCOLE.md` est ecrit pour cela. Il documente, au-dela des commandes
+qui fonctionnent:
+
+- **ce que le firmware n'honore pas** (`ESC t`, `GS ( k`, `GS k`, `GS B`,
+  caracteres non-ASCII), avec les traces reellement obtenues sur papier;
+- **les commandes portees mais jamais executees** — une vingtaine,
+  transcrites du SDK sans verification materielle;
+- **les pieges qui ressemblent a des bugs firmware** mais viennent de
+  l'implementation (retour a la ligne, controle de flux, mode papier).
+
 ## A faire
 
 - **Document de protocole autonome** decrivant toutes les trames decodees,

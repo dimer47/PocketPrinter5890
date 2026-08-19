@@ -274,6 +274,18 @@ reset.
 Deliberately not ported: firmware update (`updatePrinterLuck`). An untested
 port failing mid-write would leave the printer unusable.
 
+## Reimplementing in another language
+
+`docs/PROTOCOLE.md` is written for that purpose. It documents, beyond the
+working commands:
+
+- **what the firmware does not honour** (`ESC t`, `GS ( k`, `GS k`, `GS B`,
+  non-ASCII characters), with the actual traces seen on paper;
+- **which commands were ported but never executed** — roughly twenty of
+  them, transcribed from the SDK without hardware verification;
+- **the pitfalls that look like firmware bugs** but come from the
+  implementation (line wrapping, flow control, paper mode).
+
 ## To do
 
 - **Standalone protocol document** covering every decoded frame, aimed at

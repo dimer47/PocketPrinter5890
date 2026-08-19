@@ -311,6 +311,169 @@ seul bloc: le firmware perd des donnees. Decouper en bandes de 24 a 64 lignes, c
 une commande `1D 76 30` complete et autonome. C'est la methode utilisee par toutes les
 implementations qui fonctionnent sur cette famille.
 
+## Ce qui ne fonctionne pas sur ce firmware
+
+Section destinee a qui reimplemente le protocole dans un autre langage. Ces
+limites ont ete etablies par impression physique, pas deduites du code: les
+commandes concernees font partie du standard ESC/POS et paraissent legitimes,
+mais le firmware A2Y ne les honore pas. Les essayer fait perdre du temps et,
+pour certaines, gaspille du papier.
+
+### ESC t, pages de code — IGNOREE
+
+Une mire imprimant les memes six octets accentues apres chacune des neuf
+commandes `ESC t 0` a `ESC t 19` a produit **neuf lignes rigoureusement
+identiques, toutes illisibles**. Le firmware ne change jamais de table.
+
+Pire, il laisse un octet parasite s'imprimer: apres `1B 74 13`, un `a` isole
+apparait devant la ligne suivante. Ne pas emettre cette commande du tout.
+
+### Caracteres non-ASCII — NON GERES
+
+Consequence directe de ce qui precede. `°`, `é`, `è`, `à`, `û`, `ç` sortent
+en carre plein, quelle que soit la page de code declaree. Seul l'ASCII 0x20
+a 0x7E est rendu.
+
+Contournement retenu: transliteration avant envoi (`18°C` devient `18degC`,
+`café` devient `cafe`, `12 €` devient `12 EUR`). Un texte legerement
+approximatif vaut mieux qu'un carre illisible.
+
+### GS ( k, QR code natif — NON IMPLEMENTEE
+
+La commande s'imprime **en clair**, sous forme de texte. Trace reelle relevee
+sur un ticket:
+
+```text
+k1A2k1Ck1E1k1P0https://exemple.fr/meteok1Q0
+```
+
+Le `k` est l'octet `0x6B` de `GS ( k`; le firmware ne reconnait pas la
+commande et recrache la sequence entiere comme du texte.
+
+### GS k, code-barres natif — NON IMPLEMENTEE
+
+Meme comportement:
+
+```text
+<I{BMETEO2026
+```
+
+### GS B, inversion video — NON IMPLEMENTEE
+
+Aucun effet visible: le texte sort en noir sur blanc comme d'habitude.
+
+### Consequence: les codes doivent etre rasterises
+
+L'application officielle ne procede pas autrement. Son SDK n'expose
+**aucune** fonction d'impression de texte ni de code: tout est rendu en
+bitmap cote telephone, puis envoye par `1D 76 30`. Une recherche de `GS k`
+et `GS ( k` dans l'integralite du SDK et de l'application ne donne aucune
+occurrence.
+
+Autrement dit, le mode texte natif fonctionne mais reste hors des sentiers
+battus par le fabricant; les codes n'ont pas d'autre voie que l'image.
+
+### Pieges qui ne sont pas des limites du firmware
+
+A ne pas confondre avec ce qui precede: ces points ont l'apparence de bugs
+materiels mais viennent de l'implementation.
+
+| Symptome | Cause reelle |
+|---|---|
+| Ligne coupee en plein mot (« l'apres-m » / « idi. ») | Ligne depassant 32 colonnes; le firmware coupe au caractere pres. Decouper en amont. |
+| Rien ne s'imprime, tout est acquitte | Sequence d'activation absente. |
+| Impression tres lente, millimetre par millimetre | Credits de flux ignores, paquets de 20 octets. |
+| Papier qui defile longuement apres l'impression | `1F 80` envoye sur du papier continu: declare une etiquette de longueur fixe. |
+| Marges laterales asymetriques | Mecanique: la tete couvre 48 mm sur ~56 mm de papier. Non corrigeable. |
+
+## Etat de validation des commandes
+
+Trois niveaux, a lire avant de se fier a une commande.
+
+### Verifiees par impression physique
+
+```text
+10 FF F1 03    activation          indispensable
+00 x12         reveil              indispensable
+10 FF F1 45    fin de travail      indispensable
+1F 80 t l      type de papier      mode etiquette
+1D 0C          calage              mode etiquette
+1D 76 30 ...   raster              384 px, bandes de 24 lignes
+1B 4A n        avance points
+1B 64 n        avance lignes
+1B 40          init
+10 FF 10 00 n  densite             repond OK sur FF01
+10 FF 20 F0    modele              repond "A2Y"
+10 FF 20 F1    firmware            repond "V1.06LY"
+10 FF 50 F1    batterie            repond 00 nn
+10 FF 40       etat papier
+1B 61 n        alignement
+1B 45 n        gras
+1D 21 n        taille de caractere
+```
+
+### Portees mais JAMAIS EXECUTEES
+
+Extraites du SDK et fidelement transcrites, sans aucune verification sur
+machine. Le SDK couvre plus de cent cinquante modeles: rien ne garantit que
+l'A2Y les implemente. **Les utiliser sans les tester expose a des surprises.**
+
+```text
+10 FF C0 n           vitesse d'impression
+1F 70 01 n           niveau de chauffe
+10 FF 12 hi lo       extinction automatique       (voir reserve ci-dessous)
+10 FF 13             lecture extinction auto
+10 FF 30 27 n        mode d'impression
+10 FF 04             reglages d'usine             DESTRUCTIF si supporte
+10 FF 53 4A f + date horloge interne
+10 FF B0             lecture format horaire
+10 FF 15 lo hi       largeur d'impression
+10 FF 20 F2          numero de serie
+10 FF 20 EF          bootloader
+10 FF 20 A0          lecture vitesse
+10 FF 11             lecture densite
+10 FF 70             lecture reglages
+1B BB CC / BB / AA   marques de decoupe
+1F 11 11 n           recul papier
+1F 11 n              calage automatique
+FC FF 00 02 45 02 00 46   declaration de plateforme
+```
+
+Reserve particuliere sur `10 FF 12`: la valeur `0` est proposee comme
+desactivation de l'extinction automatique, par convention repandue. **Ce
+comportement n'est pas verifie**; le firmware peut la refuser ou imposer un
+plancher. Relire avec `10 FF 13` apres ecriture pour savoir ce qui a ete
+retenu.
+
+### Volontairement non portee
+
+`updatePrinterLuck` — mise a jour du firmware, via `YXFirmwareUpdater`. Un
+portage non teste qui echoue en cours d'ecriture laisse une machine
+inutilisable. Le risque est sans commune mesure avec le benefice.
+
+## Contribuer
+
+Ce document decrit un seul exemplaire: **A2Y, firmware V1.06LY**. D'autres
+declinaisons de marque ou revisions de firmware peuvent se comporter
+differemment.
+
+Les retours utiles, par ordre d'interet:
+
+1. **Une commande de la liste « jamais executees » testee sur machine** —
+   preciser le modele, le firmware, la commande et ce qui s'est passe.
+2. **Un modele different** qui repond autre chose a `10 FF 20 F0`.
+3. **Le raster compresse**: le SDK active `setCompress(true)` pour l'A2Y,
+   ce qui suppose un encodage compresse non encore identifie.
+4. **Le comportement USB-C**: l'imprimante reste-t-elle eveillee branchee?
+   Absent du SDK comme des fiches produit.
+5. **Le troisieme octet de la trame batterie** (`02 64 **00**`), ignore par
+   le SDK. Le bit `isCharging` (0x20) du statut suggere qu'il pourrait
+   signaler la charge, sans confirmation.
+
+Toute correction d'une affirmation de ce document est bienvenue: plusieurs
+diagnostics initiaux se sont reveles faux, et sont signales comme tels dans
+la section des bugs.
+
 ## Bugs identifies le 2026-08-19 (analyse de ble.log, 1748 lignes)
 
 ### Bug 1 - largeur raster fausse (cause principale)
