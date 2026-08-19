@@ -224,6 +224,19 @@ derriere `CodeBitmaps.qrMatrix` pour rester remplacable.
 Le SDK distingue ces cas par `printOnce()` et `printTagOnce()`. Envoyer
 `1F 80` sur du papier continu fait derouler du papier inutilement.
 
+## Application de demonstration
+
+`Examples/DemoApp` pilote l'imprimante depuis une fenetre macOS: decouverte
+des peripheriques, details GATT, niveau de batterie, editeur de ticket avec
+apercu en direct, texte natif, codes-barres, delai d'extinction automatique,
+et une console hexadecimale montrant chaque trame dans les deux sens.
+
+![Application de demonstration macOS](docs/images/app-macos.jpg)
+
+L'interface suit la langue du systeme (francais ou anglais) et un menu
+**Langue** permet de basculer, ce qui rend les deux traductions verifiables
+sans toucher aux reglages du systeme.
+
 ## Structure du depot
 
 ```text

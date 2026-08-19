@@ -222,6 +222,19 @@ system dependency; QR codes rely on CoreImage, isolated behind
 The SDK separates these cases with `printOnce()` and `printTagOnce()`.
 Sending `1F 80` on continuous paper wastes paper.
 
+## Demonstration app
+
+`Examples/DemoApp` drives the printer from a macOS window: device discovery,
+GATT details, battery level, receipt editor with live preview, native text,
+barcodes, auto power-off delay, and a hex console showing every frame in both
+directions.
+
+![macOS demonstration app](docs/images/app-macos.jpg)
+
+The interface follows the system language (English or French) and a
+**Language** menu switches between them, which makes both translations
+verifiable without touching system settings.
+
 ## Repository layout
 
 ```text
