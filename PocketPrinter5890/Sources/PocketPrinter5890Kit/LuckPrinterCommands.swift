@@ -121,15 +121,23 @@ public enum LuckPrinter {
     /// `getTimeFormat()` — lit le format d'horodatage.
     public static let getTimeFormat: [UInt8] = [0x10, 0xff, 0xb0]
 
-    /// `setTimeFormat(date)` — regle l'horloge interne. Non verifiee.
+    /// `setTimeFormat(format, date)` — regle l'horloge interne. Non verifiee.
+    ///
+    /// Le SDK prefixe la charge utile par `10 FF 53 4A <format>`; la version
+    /// precedente de ce portage n'envoyait que les octets de date, sans
+    /// l'en-tete, et n'aurait donc pas ete comprise.
     ///
     /// L'annee occupe deux octets, puis mois, jour, heure, minute, seconde.
-    public static func setTimeFormat(_ date: Date, calendar: Calendar = .current) -> [UInt8] {
+    public static func setTimeFormat(
+        _ date: Date,
+        format: UInt8 = 0,
+        calendar: Calendar = .current
+    ) -> [UInt8] {
         let parts = calendar.dateComponents(
             [.year, .month, .day, .hour, .minute, .second],
             from: date
         )
-        return [
+        return [0x10, 0xff, 0x53, 0x4a, format] + [
             UInt8((parts.year ?? 2000) / 256),
             UInt8((parts.year ?? 2000) % 256),
             UInt8(parts.month ?? 1),

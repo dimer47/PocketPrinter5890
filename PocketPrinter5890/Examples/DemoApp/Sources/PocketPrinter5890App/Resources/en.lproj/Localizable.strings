@@ -66,3 +66,10 @@
 /* Langue */
 "menu.language" = "Language";
 "language.system" = "System";
+
+/* Extinction automatique */
+"shutdown.delay" = "Auto power-off: %d min";
+"shutdown.disabled" = "Auto power-off: disabled";
+"shutdown.apply" = "Apply";
+"shutdown.hint" = "0 disables power-off, if the firmware accepts it. Untested value.";
+"settings.read" = "Read current settings";

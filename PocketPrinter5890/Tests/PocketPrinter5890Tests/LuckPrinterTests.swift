@@ -57,9 +57,10 @@ final class LuckPrinterPortTests: XCTestCase {
         parts.second = 5
         let date = calendar.date(from: parts)!
 
+        // Le SDK prefixe la date par `10 FF 53 4A <format>`.
         XCTAssertEqual(
             LuckPrinter.setTimeFormat(date, calendar: calendar),
-            [0x07, 0xea, 0x08, 0x13, 0x0e, 0x1e, 0x05]
+            [0x10, 0xff, 0x53, 0x4a, 0x00, 0x07, 0xea, 0x08, 0x13, 0x0e, 0x1e, 0x05]
         )
     }
 }

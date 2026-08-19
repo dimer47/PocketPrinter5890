@@ -44,6 +44,15 @@ public enum ResponseDecoder {
             return "Batterie: \(bytes[1])%"
         }
 
+        // Reponse a `10 FF 13`: delai d'extinction sur deux octets.
+        if context.contains("extinction") || context.contains("shutdown") {
+            guard bytes.count >= 2 else { return "Extinction auto: reponse vide" }
+            let minutes = Int(bytes[bytes.count - 2]) << 8 | Int(bytes[bytes.count - 1])
+            return minutes == 0
+                ? "Extinction auto: desactivee"
+                : "Extinction auto: \(minutes) min"
+        }
+
         if context.contains("papier") || context.contains("paper") {
             switch bytes.last {
             case 0x00:

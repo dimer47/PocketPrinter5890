@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var textSize = 1
     @State private var textBold = false
     @State private var textAlignment: ESCPOS.Alignment = .left
+    @State private var autoShutdown = 15.0
 
     var body: some View {
         NavigationSplitView {
@@ -114,6 +115,27 @@ struct ContentView: View {
 
             Button("info.read") {
                 transport.readDeviceInformation()
+            }
+            .disabled(!transport.isConnected)
+
+            HStack {
+                Text(autoShutdown == 0
+                     ? NSLocalizedString("shutdown.disabled", comment: "")
+                     : String(format: NSLocalizedString("shutdown.delay", comment: ""), Int(autoShutdown)))
+                Spacer()
+                Button("shutdown.apply") {
+                    printer().setAutoShutdown(minutes: Int(autoShutdown))
+                }
+                .disabled(!transport.isConnected)
+            }
+            Slider(value: $autoShutdown, in: 0...240, step: 5)
+                .disabled(!transport.isConnected)
+            Text("shutdown.hint")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Button("settings.read") {
+                printer().readSettings()
             }
             .disabled(!transport.isConnected)
 

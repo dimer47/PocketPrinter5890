@@ -66,3 +66,10 @@
 /* Langue */
 "menu.language" = "Langue";
 "language.system" = "Systeme";
+
+/* Extinction automatique */
+"shutdown.delay" = "Extinction auto: %d min";
+"shutdown.disabled" = "Extinction auto: desactivee";
+"shutdown.apply" = "Appliquer";
+"shutdown.hint" = "0 desactive l%@extinction, si le firmware l%@accepte. Valeur non testee.";
+"settings.read" = "Lire les reglages actuels";
