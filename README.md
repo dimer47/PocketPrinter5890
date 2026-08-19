@@ -17,6 +17,15 @@ Android application, which embeds the LuckPrinter SDK.
 Both brands ship the same hardware, the same firmware and the same official
 application: only the logo on the lid differs.
 
+## Try it now
+
+**[dimer47.github.io/PocketPrinter5890](https://dimer47.github.io/PocketPrinter5890/)**
+
+Open that page in Chrome, Edge or Opera, click Connect, and print. Nothing to
+install. Web Bluetooth is not available in Firefox or Safari.
+
+![macOS demonstration app](docs/images/app-macos.jpg)
+
 ## What is here
 
 | Directory | Contents |
@@ -128,6 +137,20 @@ interest:
 
 Corrections to any claim in the specification are welcome. Several early
 diagnoses in this project turned out to be wrong, and are recorded as such.
+
+## How this was built
+
+Built with an AI assistant, and verified on paper.
+
+The assistant read decompiled Java quickly and wrote most of the code. It was
+also confidently wrong several times — it called the raster width "the main
+cause" when it was one of two, read flow-control frames as status codes for
+hours, and wrote a QR encoder producing codes that looked perfect and scanned
+as nothing.
+
+Every one of those was caught by printing and looking at the paper. Claims in
+this repository about what the printer does come from an actual print, not
+from reading code. The ones that do not are marked as untested.
 
 ## Licence
 

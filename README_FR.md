@@ -17,6 +17,16 @@ echangees avec la machine, puis decompilation de l'application officielle
 Les deux marques couvrent le meme materiel, le meme firmware et la meme
 application officielle: seul le logo sur le capot change.
 
+## Essayer tout de suite
+
+**[dimer47.github.io/PocketPrinter5890](https://dimer47.github.io/PocketPrinter5890/)**
+
+Ouvrez cette page dans Chrome, Edge ou Opera, cliquez sur Connect, et
+imprimez. Rien a installer. Web Bluetooth n'existe ni sur Firefox ni sur
+Safari.
+
+![Application de demonstration macOS](docs/images/app-macos.jpg)
+
 ## Contenu du depot
 
 | Repertoire | Contenu |
@@ -133,6 +143,22 @@ differemment. Retours utiles, par ordre d'interet:
 Toute correction d'une affirmation de la specification est bienvenue.
 Plusieurs diagnostics initiaux se sont reveles faux et sont consignes comme
 tels.
+
+## Comment ce projet a ete construit
+
+Construit avec l'aide d'une IA, et verifie sur papier.
+
+L'assistant a lu du Java decompile rapidement et ecrit l'essentiel du code.
+Il s'est aussi trompe avec assurance a plusieurs reprises — il a presente la
+largeur du raster comme « la cause principale » alors qu'il y en avait deux,
+a lu les trames de controle de flux comme des statuts pendant des heures, et
+a ecrit un encodeur QR produisant des codes parfaits a l'oeil et illisibles
+au scanner.
+
+Chacune de ces erreurs a ete rattrapee en imprimant et en regardant le
+papier. Les affirmations de ce depot sur le comportement de l'imprimante
+viennent d'une impression reelle, pas d'une lecture de code. Celles qui n'en
+viennent pas sont signalees comme non testees.
 
 ## Licence
 
