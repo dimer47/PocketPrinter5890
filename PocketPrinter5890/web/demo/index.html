@@ -54,6 +54,12 @@
     <button id="info" disabled>Read device info</button>
   </div>
   <p id="status">Not connected</p>
+  <div id="deviceBar" hidden style="display:flex;gap:1rem;align-items:center;
+       padding:0.5rem 0.8rem;border-radius:6px;background:#8881;margin-top:0.5rem">
+    <span id="battery" style="font-weight:600">—</span>
+    <span id="model" style="font-size:0.85rem;color:#888"></span>
+    <span id="firmware" style="font-size:0.85rem;color:#888"></span>
+  </div>
 </fieldset>
 
 <fieldset>
@@ -101,6 +107,40 @@ This is a native text test.</textarea>
 </fieldset>
 
 <fieldset>
+  <legend>Demos</legend>
+  <div class="row">
+    <button id="demoWeather" disabled>Weather + horoscope</button>
+    <button id="demoTypography" disabled>Typography sampler</button>
+    <button id="demoPattern" disabled>Test pattern</button>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Settings</legend>
+  <div class="row">
+    <label style="width:auto">Density
+      <select id="density" style="width:auto">
+        <option value="0">Light</option>
+        <option value="1" selected>Medium</option>
+        <option value="2">Dark</option>
+      </select>
+    </label>
+    <label style="width:auto">Paper
+      <select id="paperMode" style="width:auto">
+        <option value="continuous" selected>Continuous</option>
+        <option value="label">Labels</option>
+      </select>
+    </label>
+    <button id="readSettings" disabled>Read settings</button>
+  </div>
+  <div class="row" style="margin-top:0.5rem">
+    <label class="grow">Clearance feed: <span id="feedValue">80</span> dots
+      <input type="range" id="feedDots" min="0" max="1200" step="10" value="80">
+    </label>
+  </div>
+</fieldset>
+
+<fieldset>
   <legend>Paper</legend>
   <div class="row">
     <button id="feed" disabled>Feed 80 dots</button>
@@ -117,7 +157,8 @@ This is a native text test.</textarea>
 import {
   PocketPrinter, WebBluetoothTransport, PrintDocument,
   renderBarcode, Symbology, bitmapFromImage, bitmapToCanvas,
-  toHex, Alignment, DitherMode,
+  toHex, Alignment, DitherMode, PaperMode,
+  weatherAndHoroscope, typographySampler, testPattern,
 } from '../dist/index.js';
 
 const $ = (id) => document.getElementById(id);
@@ -137,19 +178,24 @@ const printer = new PocketPrinter(new WebBluetoothTransport(), {}, {
     log('rx', `RX  ${toHex(raw)}${response.text ? '   ' + response.text : ''}`);
   },
   onInfo: (info) => {
-    const parts = [];
-    if (info.model) parts.push(info.model);
-    if (info.firmware) parts.push(info.firmware);
-    if (info.battery !== undefined) parts.push(`${info.battery}%`);
-    if (parts.length) $('status').textContent = `Connected — ${parts.join('  ')}`;
+    $('deviceBar').hidden = false;
+    if (info.battery !== undefined) {
+      const colour = info.battery < 15 ? '#d1242f' : info.battery < 30 ? '#fb8516' : '#30a14e';
+      $('battery').innerHTML =
+        `<span style="color:${colour}">&#9632;</span> ${info.battery}%`;
+    }
+    if (info.model) $('model').textContent = info.model;
+    if (info.firmware) $('firmware').textContent = info.firmware;
   },
 });
 
 const setConnected = (connected) => {
-  for (const id of ['disconnect','info','printText','printCode','printImage','feed','feedLong']) {
-    $(id).disabled = !connected;
-  }
+  const ids = ['disconnect','info','printText','printCode','printImage',
+               'feed','feedLong','demoWeather','demoTypography','demoPattern',
+               'readSettings'];
+  for (const id of ids) $(id).disabled = !connected;
   $('connect').disabled = connected;
+  if (!connected) $('deviceBar').hidden = true;
 };
 
 $('connect').onclick = async () => {
@@ -174,11 +220,15 @@ $('disconnect').onclick = async () => {
 $('info').onclick = () => printer.readDeviceInformation();
 
 $('printText').onclick = async () => {
-  await printer.printText($('text').value, {
-    size: Number($('size').value),
-    bold: $('boldText').checked,
-    alignment: Number($('align').value),
-  });
+  const document_ = new PrintDocument();
+  for (const line of $('text').value.split('\n')) {
+    document_.text(line, {
+      size: Number($('size').value),
+      bold: $('boldText').checked,
+      alignment: Number($('align').value),
+    });
+  }
+  await printer.print(document_, currentOptions());
   log('tx', 'TX  text');
 };
 
@@ -204,7 +254,7 @@ updateCodePreview();
 $('printCode').onclick = async () => {
   const bitmap = updateCodePreview();
   if (bitmap) {
-    await printer.printBitmap(bitmap);
+    await printer.printBitmap(bitmap, currentOptions());
     log('tx', 'TX  barcode');
   }
 };
@@ -226,9 +276,34 @@ $('file').onchange = async (event) => {
 
 $('printImage').onclick = async () => {
   if (imageBitmap) {
-    await printer.printBitmap(imageBitmap);
+    await printer.printBitmap(imageBitmap, currentOptions());
     log('tx', 'TX  image');
   }
+};
+
+// --- Options appliquees a chaque impression
+const currentOptions = () => ({
+  density: Number($('density').value),
+  paperMode: $('paperMode').value,
+  trailingFeedDots: Number($('feedDots').value),
+});
+
+$('feedDots').oninput = () => { $('feedValue').textContent = $('feedDots').value; };
+$('density').onchange = () => printer.setDensity(Number($('density').value));
+$('readSettings').onclick = () => printer.readSettings();
+
+// --- Demos
+$('demoWeather').onclick = async () => {
+  await printer.print(weatherAndHoroscope(), currentOptions());
+  log('tx', 'TX  weather demo');
+};
+$('demoTypography').onclick = async () => {
+  await printer.print(typographySampler(), currentOptions());
+  log('tx', 'TX  typography sampler');
+};
+$('demoPattern').onclick = async () => {
+  await printer.printBitmap(testPattern(), currentOptions());
+  log('tx', 'TX  test pattern');
 };
 
 $('feed').onclick = () => printer.feed(80);

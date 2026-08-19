@@ -37,6 +37,9 @@ export {
 } from './protocol/raster.js';
 export { columnsFor, wrap, columns } from './protocol/text-layout.js';
 
+// Demonstration documents
+export { weatherAndHoroscope, typographySampler, testPattern } from './demos.js';
+
 // Rendering
 export {
   renderQR,

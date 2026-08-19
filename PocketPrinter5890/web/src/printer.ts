@@ -103,23 +103,30 @@ export class PocketPrinter {
     await this.print(document);
   }
 
-  /** Feeds paper without printing. */
+  /**
+   * Feeds paper without printing.
+   *
+   * Wrapped in the activation sequence: a bare feed command is acknowledged
+   * and ignored, like every command sent outside a job.
+   */
   async feed(dots: number): Promise<void> {
-    await this.sendCommand(escpos.feed(dots));
+    await this.runActivated(escpos.feed(dots));
   }
 
   // --- Settings and information
 
   async readDeviceInformation(): Promise<void> {
-    await this.sendCommand(cmd.READ_MODEL);
-    await this.sendCommand(cmd.READ_FIRMWARE);
-    await this.sendCommand(cmd.READ_BATTERY);
-    await this.sendCommand(cmd.READ_STATUS);
+    await this.runActivated([
+      ...cmd.READ_MODEL,
+      ...cmd.READ_FIRMWARE,
+      ...cmd.READ_BATTERY,
+      ...cmd.READ_STATUS,
+    ]);
   }
 
   async setDensity(density: cmd.Density): Promise<void> {
     this.options.density = density;
-    await this.sendCommand(cmd.setDensity(density));
+    await this.runActivated(cmd.setDensity(density));
   }
 
   /**
@@ -129,18 +136,39 @@ export class PocketPrinter {
    * with {@link readSettings} to see what was stored.
    */
   async setAutoShutdown(minutes: number): Promise<void> {
-    await this.sendCommand(cmd.setAutoShutdown(minutes));
+    await this.runActivated(cmd.setAutoShutdown(minutes));
   }
 
   async readSettings(): Promise<void> {
-    await this.sendCommand(cmd.READ_DENSITY);
-    await this.sendCommand(cmd.READ_SPEED);
-    await this.sendCommand(cmd.READ_AUTO_SHUTDOWN);
+    await this.runActivated([
+      ...cmd.READ_DENSITY,
+      ...cmd.READ_SPEED,
+      ...cmd.READ_AUTO_SHUTDOWN,
+    ]);
   }
 
-  /** Escape hatch for a command the library does not cover. */
+  /**
+   * Escape hatch for a command the library does not cover.
+   *
+   * Sends raw bytes with no activation sequence around them. Most commands
+   * need one — see {@link runActivated}.
+   */
   async sendCommand(bytes: number[]): Promise<void> {
     await this.send(new Uint8Array(bytes));
+  }
+
+  /**
+   * Runs commands inside the activation sequence.
+   *
+   * The firmware acknowledges everything it receives but executes nothing
+   * until it has been enabled and woken. This applies to reads and paper
+   * feeds just as much as to printing.
+   */
+  async runActivated(bytes: number[]): Promise<void> {
+    await this.send(new Uint8Array(cmd.enablePrinter()));
+    await this.send(new Uint8Array(cmd.WAKEUP));
+    await this.send(new Uint8Array(bytes));
+    await this.send(new Uint8Array(cmd.STOP_PRINT_JOB));
   }
 
   // --- Internals

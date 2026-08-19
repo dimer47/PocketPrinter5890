@@ -101,7 +101,7 @@ exposes no text or code printing at all, only bitmaps.
 | Barcodes (Code 128/39, EAN-13/8) | ✅ | ✅ |
 | QR codes | ✅ CoreImage | ⚠️ bring your own encoder |
 | Receipt rendering | ✅ CoreGraphics | ✅ Canvas |
-| Printing verified on hardware | ✅ macOS + iPhone | ⏳ not yet |
+| Printing verified on hardware | ✅ macOS + iPhone | ✅ Chrome |
 
 Roughly twenty commands were transcribed from the vendor SDK but never
 executed on this firmware; they are flagged as such in both implementations

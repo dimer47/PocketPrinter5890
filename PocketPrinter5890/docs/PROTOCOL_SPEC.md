@@ -137,6 +137,24 @@ Every print job must end with:
 10 FF F1 45                     stop print job
 ```
 
+### 3.1 This applies to every command, not just printing
+
+The activation sequence is not a "printing" concern. A bare `1B 4A 50` paper
+feed, or a bare `10 FF 20 F0` model query, is acknowledged and ignored just
+the same.
+
+Wrap **any** command in the sequence:
+
+```
+10 FF F1 03
+00 x12
+<your command>
+10 FF F1 45
+```
+
+This is easy to get wrong twice: an implementation can print perfectly while
+its "read device info" and "feed paper" buttons silently do nothing.
+
 ---
 
 ## 4. Print job structure

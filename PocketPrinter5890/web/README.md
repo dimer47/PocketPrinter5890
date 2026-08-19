@@ -169,5 +169,5 @@ Protocol, raster encoding, ESC/POS, barcodes, canvas rendering and both
 transports are implemented and the byte output has been checked against the
 Swift reference implementation.
 
-**Printing has not yet been verified from a browser on real hardware.** The
-Swift implementation has, on macOS and iPhone.
+Printing has been verified from Chrome on real hardware: text, barcodes and
+images all come out. The Capacitor adapter has not been run on a device.
