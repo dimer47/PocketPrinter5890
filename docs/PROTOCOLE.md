@@ -52,22 +52,19 @@ Elle doit rester independante du transport pour permettre plus tard:
 CoreBluetooth ne gere pas le Bluetooth Classic SPP/RFCOMM. Le projet ne doit pas pretendre faire du SPP
 dans cette version.
 
-## Chemin local
+## Journal BLE de l'application macOS
 
-Projet:
-
-```text
-/Users/iachi.dimitri/Projets/L13 Tronic lLIDL/L13ReceiptPrinter
-```
-
-Log persistant de l'application sandboxee:
+L'application de demonstration ecrit un journal persistant. Sous sandbox — ce
+qui est le cas quand elle est lancee depuis Xcode — macOS le place dans le
+conteneur de l'application:
 
 ```text
-/Users/iachi.dimitri/Library/Containers/local.L13ReceiptPrinter/Data/Library/Logs/L13ReceiptPrinter/ble.log
+~/Library/Containers/<bundle-id>/Data/Library/Logs/<app>/ble.log
 ```
 
-Le chemin non sandboxe `/Users/iachi.dimitri/Library/Logs/L13ReceiptPrinter/ble.log` n'est pas celui
-utilise par l'application lancee via Xcode: le sandbox macOS place les donnees dans le conteneur.
+Le chemin non sandboxe `~/Library/Logs/<app>/ble.log` n'est **pas** celui
+utilise dans ce cas: chercher au mauvais endroit fait croire que rien n'est
+journalise.
 
 ## Imprimante cible - FAITS CONFIRMES
 
@@ -266,7 +263,7 @@ Avance n points:    1B 4A n
 Avance n lignes:    1B 64 n
 Form feed:          0C
 Alignement:         1B 61 n     (0 gauche, 1 centre, 2 droite)
-Gras:               1B 45 n     (0 off, 1 on)
+Gras:               1B 45 n     (0 off, 1 on) — ACCEPTE, SANS EFFET
 Souligne:           1B 2D n
 Taille caractere:   1D 21 n     (quartet haut = largeur, bas = hauteur)
 Mode caractere:     1B 21 n
@@ -358,6 +355,31 @@ Meme comportement:
 <I{BMETEO2026
 ```
 
+### ESC E, gras — NON IMPLEMENTE
+
+Aucun effet visible. Constate sur papier depuis deux implementations
+independantes (macOS/iOS et Android), chacune emettant pourtant une sequence
+correcte `1B 45 01 ... 1B 45 00`.
+
+Pour obtenir du gras reellement visible, il faut passer par une image: rendre
+le texte en bitmap puis l'envoyer par `1D 76 30`. C'est ce que fait
+l'application officielle pour **tout** son texte, ce qui explique qu'elle
+n'ait jamais eu besoin de `ESC E`.
+
+Le compromis se voit sur le papier: un texte rasterise est nettement moins net
+que la police interne du firmware, et coute des milliers d'octets la ou une
+ligne de texte en coute quelques dizaines. Le texte natif reste preferable des
+que des caracteres simples et nets suffisent.
+
+**Utiliser un seuil dur, pas un tramage.** Constate sur papier: la diffusion
+d'erreur transforme chaque trait plein en semis de points, et le rendu sort
+fin et pale. Le tramage ne se justifie que sur une photo, ou il simule des
+gris que l'imprimante ne sait pas produire.
+
+Relever le seuil au-dessus de la valeur neutre de 128 — 160 donne un bon
+resultat. Le texte antialiase a des bords gris qu'un seuil plus bas efface,
+ce qui amaigrit chaque lettre.
+
 ### GS B, inversion video — NON IMPLEMENTEE
 
 Aucun effet visible: le texte sort en noir sur blanc comme d'habitude.
@@ -408,7 +430,6 @@ Trois niveaux, a lire avant de se fier a une commande.
 10 FF 50 F1    batterie            repond 00 nn
 10 FF 40       etat papier
 1B 61 n        alignement
-1B 45 n        gras
 1D 21 n        taille de caractere
 ```
 
@@ -575,7 +596,6 @@ Tests/                    tests unitaires
 
 ## Regles de travail
 
-- Travailler uniquement dans `/Users/iachi.dimitri/Projets/L13 Tronic lLIDL`. Executer `pwd` d'abord.
 - Preserver les fichiers existants.
 - Ne pas casser les tests. Lancer `swift test` et le build apres chaque changement.
 - **Ne jamais affirmer que l'impression physique fonctionne sans que l'utilisateur l'ait observee.**
@@ -585,11 +605,10 @@ Tests/                    tests unitaires
 ## Commandes utiles
 
 ```bash
-cd "/Users/iachi.dimitri/Projets/L13 Tronic lLIDL/L13ReceiptPrinter"
 swift test
 xcodebuild -project L13ReceiptPrinterApp.xcodeproj -scheme L13ReceiptPrinterApp -destination 'platform=macOS' build
 open "L13ReceiptPrinterApp.xcodeproj"
-tail -n 200 "/Users/iachi.dimitri/Library/Containers/local.L13ReceiptPrinter/Data/Library/Logs/L13ReceiptPrinter/ble.log"
+tail -n 200 ~/Library/Containers/<bundle-id>/Data/Library/Logs/<app>/ble.log
 swift run L13BLEProbe
 ```
 
@@ -608,66 +627,3 @@ Sources sur la L13 a etiquettes - **modele different, a titre historique uniquem
 - https://atctwo.net/posts/2024/07/16/thermal-printer.html
 
 Ne pas appliquer les largeurs et specificites L13 (96 px, 14 mm, etiquettes) a cette machine.
-
-## Mega prompt reutilisable
-
-```text
-Travaille directement et uniquement dans le dossier local courant:
-
-/Users/iachi.dimitri/Projets/L13 Tronic lLIDL
-
-Commence par executer pwd. Si le chemin ne commence pas par /Users/iachi.dimitri/Projets/,
-arrete-toi sans creer de fichiers. Preserve tout fichier existant.
-
-Projet a maintenir:
-/Users/iachi.dimitri/Projets/L13 Tronic lLIDL/L13ReceiptPrinter
-
-Application macOS 13+ SwiftUI/CoreBluetooth + librairie reutilisable pour piloter une mini
-imprimante thermique de poche SilverCrest/Tronic (Lidl), IAN 508705, famille generique 5890.
-Locale, sans cloud.
-
-MATERIEL - FAITS CONFIRMES:
-- Mini imprimante de poche a ticket de caisse, papier thermique continu ~56 mm, rouleau 7,8 m.
-- 203 dpi. Batterie Li-Ion 3,7 V 1200 mAh. Bluetooth 5.0 + USB-C.
-- LARGEUR D'IMPRESSION: 384 pixels = 48 octets par ligne. Header: 1D 76 30 00 30 00 yL yH.
-- Nom BLE: "Mini Pocket Printer_BLE". UUID macOS: 759ACF04-8D4E-CA6B-DB61-3189407E8DBC.
-- L'APPLICATION OFFICIELLE POCKET PRINTER IMPRIME CORRECTEMENT. Le materiel est sain.
-  Tout echec d'impression est un bug logiciel.
-
-CE QUE CE N'EST PAS:
-- Ce n'est PAS une L13 a etiquettes 14 mm / 96 px. Ne jamais utiliser 96 px par defaut.
-- Ne pas affirmer que le modele est DP-L13: aucune reponse de modele n'a jamais ete obtenue.
-- Les specifications de l'article atctwo concernent un autre modele.
-
-BLE:
-- FF00 est le service qui fonctionne: RX write FF02, notifications FF01 ET FF03.
-- FF01 porte des reponses utiles: 4F 4B = "OK", 00 = papier present.
-- FF03 porte des statuts: 01 01 = ack/busy, 01 04 = statut papier (ne doit PAS bloquer
-  l'impression), 02 64 00 = batterie 100%.
-- Autres profils en repli: Transparent UART 49535343-fe7d-..., 18F0, e781.
-
-COMMANDES:
-- ESC/POS standard est le socle: 1B 40 init, 1D 76 30 raster, 1B 4A n avance,
-  1B 61 n alignement, 1B 45 n gras, 1D 21 n taille, 1D 6B code-barres, 1D 28 6B QR.
-- Proprietaires: 10 FF 10 00 n densite (repond OK), 10 FF 40 papier, 10 FF 50 F1 batterie.
-- Le raster DOIT etre envoye par bandes de 24 a 64 lignes, jamais en un seul gros bloc.
-
-BUGS CONNUS A NE PAS REINTRODUIRE:
-1. Largeur raster 96 px au lieu de 384 px: cause principale de l'echec d'impression.
-2. drainWriteQueue() abandonne la file quand canSendWriteWithoutResponse est faux.
-   Il FAUT implementer peripheralIsReady(toSendWriteWithoutResponse:) et y relancer la file.
-   Symptome: raster tronque, ex. 20 octets envoyes sur 2168 annonces.
-3. Reponses FF01 ignorees.
-4. Statut 01 04 interprete a tort comme un blocage.
-
-Fichier de log a inspecter:
-/Users/iachi.dimitri/Library/Containers/local.L13ReceiptPrinter/Data/Library/Logs/L13ReceiptPrinter/ble.log
-
-PRIORITES:
-1. Inspecter les logs et le code avant de modifier.
-2. Largeur 384 px, configurable.
-3. File BLE robuste, envoi par bandes.
-4. Librairie reutilisable: texte, images, codes-barres, QR, tickets.
-5. Ne pas casser les tests: swift test + xcodebuild apres chaque changement.
-6. Ne JAMAIS dire que l'impression physique est validee sans observation reelle de l'utilisateur.
-```
