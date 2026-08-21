@@ -52,7 +52,7 @@
 /* Texte natif */
 "text.native" = "Texte natif (sans rasterisation)";
 "text.sample" = "BONJOUR\nCeci est un test de texte natif.";
-"text.bold" = "Gras";
+"text.boldUnsupported" = "Gras non supporté par ce firmware en texte natif.";
 "text.size" = "Taille %d";
 
 /* Apercu et console */
@@ -77,3 +77,4 @@
 /* Onglets en fenetre etroite */
 "tab.editor" = "Ticket";
 "tab.preview" = "Apercu";
+"receipt.mode" = "Mode d'impression";

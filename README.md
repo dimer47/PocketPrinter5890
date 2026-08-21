@@ -32,10 +32,11 @@ install. Web Bluetooth is not available in Firefox or Safari.
 |---|---|
 | **[`docs/`](docs/)** | Protocol specification — the reference, independent of any language |
 | **[`swift/`](swift/)** | Swift library for macOS, iOS and iPadOS, plus two demo apps |
+| **[`android/`](android/)** | Kotlin library for Android, plus a Compose demo app |
 | **[`web/`](web/)** | TypeScript library for the browser and Capacitor |
 
-The protocol specification is the source of truth. Both implementations
-follow it; if they ever disagree, the specification is what a third one
+The protocol specification is the source of truth. All three implementations
+follow it; if they ever disagree, the specification is what a fourth one
 should be written against.
 
 ## Start here
@@ -43,10 +44,12 @@ should be written against.
 **Reimplementing in another language?** Read
 **[`docs/PROTOCOL_SPEC.md`](docs/PROTOCOL_SPEC.md)**. It is written to be
 sufficient on its own: byte sequences, the flow-control algorithm, a
-symptom-to-cause table and a minimal pseudocode implementation. No Swift or
-TypeScript knowledge needed.
+symptom-to-cause table and a minimal pseudocode implementation. No Swift, Kotlin
+or TypeScript knowledge needed.
 
 **Building an Apple app?** See [`swift/README.md`](swift/README.md).
+
+**Building an Android app?** See [`android/README.md`](android/README.md).
 
 **Building for the web or with Capacitor?** See [`web/README.md`](web/README.md).
 

@@ -36,7 +36,13 @@ public enum ESCPOS {
 
     // MARK: - Styles de texte
 
-    /// `ESC E n`
+    /// `ESC E n` — gras.
+    ///
+    /// - Warning: le firmware A2Y **accepte la commande sans l'appliquer**.
+    ///   Constate sur papier depuis macOS/iOS et depuis Android. Pour du gras
+    ///   reellement visible, rendre le texte en image et l'envoyer en raster
+    ///   (`ReceiptRenderer`), comme le fait l'application officielle pour tout
+    ///   son texte.
     public static func bold(_ enabled: Bool) -> [UInt8] {
         [0x1b, 0x45, enabled ? 1 : 0]
     }

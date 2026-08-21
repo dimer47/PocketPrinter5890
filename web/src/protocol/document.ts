@@ -12,6 +12,10 @@ export type PrintElement =
       type: 'text';
       value: string;
       size?: number;
+      /**
+       * Sans effet sur ce firmware: la commande `ESC E` est acceptee puis
+       * ignoree. Passer par une image pour du gras visible.
+       */
       bold?: boolean;
       underline?: boolean;
       inverted?: boolean;

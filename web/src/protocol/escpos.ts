@@ -22,6 +22,14 @@ export const LINE_FEED: number[] = [0x0a];
 export const align = (alignment: Alignment): number[] => [0x1b, 0x61, alignment];
 
 /** `ESC E n` */
+/**
+ * `ESC E n` — gras.
+ *
+ * Attention: le firmware A2Y **accepte la commande sans l'appliquer**.
+ * Constate sur papier depuis macOS/iOS et depuis Android. Pour du gras
+ * reellement visible, rendre le texte en image et l'envoyer en raster, comme
+ * le fait l'application officielle pour tout son texte.
+ */
 export const bold = (on: boolean): number[] => [0x1b, 0x45, on ? 1 : 0];
 
 /** `ESC - n` — 0 none, 1 thin, 2 thick. */

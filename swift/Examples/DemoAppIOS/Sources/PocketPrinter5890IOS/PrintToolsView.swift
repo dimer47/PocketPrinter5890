@@ -8,7 +8,6 @@ struct PrintToolsView: View {
 
     @State private var freeText = NSLocalizedString("text.sample", comment: "")
     @State private var textSize = 1
-    @State private var textBold = false
     @State private var textAlignment: ESCPOS.Alignment = .left
     @State private var codeContent = "https://exemple.fr"
 
@@ -27,12 +26,16 @@ struct PrintToolsView: View {
                     String(format: NSLocalizedString("text.size", comment: ""), textSize),
                     value: $textSize, in: 1...4
                 )
-                Toggle("text.bold", isOn: $textBold)
+                // Pas d'interrupteur « gras »: le firmware A2Y accepte
+                // `ESC E` sans l'appliquer, constate sur papier ici et sur
+                // Android. Un reglage sans effet ferait croire a une panne.
+                Text("text.boldUnsupported")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 Button("print.text") {
                     printer().print(
                         text: freeText,
                         size: textSize,
-                        bold: textBold,
                         alignment: textAlignment,
                         options: options
                     )

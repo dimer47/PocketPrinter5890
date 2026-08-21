@@ -41,8 +41,15 @@ public struct ReceiptRenderer {
 
     public init(
         width: Int = MonochromeBitmap.nativeWidth,
-        threshold: UInt8 = 128,
-        ditherMode: DitherMode = .floydSteinberg,
+        // Un ticket est fait de traits, pas de degrades. Floyd-Steinberg
+        // disperse les pixels pour simuler du gris: applique a du texte, il
+        // transforme chaque trait plein en semis de points, et le rendu sort
+        // tres clair et tres fin. Le tramage ne vaut que pour une photo.
+        //
+        // Le seuil est relevé a 160: l'antialiasing du texte produit des bords
+        // gris qu'un seuil trop bas efface, ce qui amaigrit le trait.
+        threshold: UInt8 = 160,
+        ditherMode: DitherMode = .threshold,
         orientation: ReceiptOrientation = .normal
     ) {
         self.width = width

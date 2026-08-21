@@ -6,6 +6,7 @@ struct ReceiptView: View {
     @ObservedObject var transport: PocketPrinter5890BLE
     @Binding var options: PrintOptions
     @State private var receipt = Receipt.sample
+    @State private var mode: ReceiptPrintMode = .rasterImage
 
     var body: some View {
         List {
@@ -42,9 +43,32 @@ struct ReceiptView: View {
                 TextField("editor.footer", text: $receipt.footer)
             }
 
+            Section("receipt.mode") {
+                Picker("receipt.mode", selection: $mode) {
+                    ForEach(ReceiptPrintMode.allCases) { value in
+                        Text(value.title).tag(value)
+                    }
+                }
+                .pickerStyle(.segmented)
+                // Aucun des deux modes n'est meilleur en toutes
+                // circonstances: le detail dit le compromis.
+                Text(mode.detail)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("preview.section") {
-                ReceiptPreview(receipt: receipt, width: options.width.pixels)
-                    .frame(maxWidth: .infinity)
+                switch mode {
+                case .rasterImage:
+                    ReceiptPreview(receipt: receipt, width: options.width.pixels)
+                        .frame(maxWidth: .infinity)
+                case .nativeText:
+                    // L'apercu partage la mise en page de l'impression: ce qui
+                    // s'affiche est ce qui sort du papier.
+                    Text(ReceiptDocument.preview(receipt, columns: options.textColumns))
+                        .font(.footnote.monospaced())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
 
             Section {
@@ -56,6 +80,11 @@ struct ReceiptView: View {
     }
 
     private func printReceipt() {
+        if mode == .nativeText {
+            let document = ReceiptDocument.build(receipt, columns: options.textColumns)
+            transport.send(PrintJobBuilder.segments(document: document, options: options))
+            return
+        }
         do {
             let renderer = ReceiptRenderer(
                 width: options.width.pixels,

@@ -5,6 +5,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var transport = PocketPrinter5890BLE()
     @State private var receipt = Receipt.sample
+    @State private var receiptMode: ReceiptPrintMode = .rasterImage
     @State private var density: PrintDensity = .medium
     @State private var printerWidth: PrinterWidth = .mm58
     @State private var paperMode: PaperMode = .continuous
@@ -14,7 +15,6 @@ struct ContentView: View {
     @State private var labelLength = 32.0
     @State private var freeText = NSLocalizedString("text.sample", comment: "")
     @State private var textSize = 1
-    @State private var textBold = false
     @State private var textAlignment: ESCPOS.Alignment = .left
     @State private var autoShutdown = 15.0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -161,6 +161,18 @@ struct ContentView: View {
 
             printSettings
 
+            Picker("receipt.mode", selection: $receiptMode) {
+                ForEach(ReceiptPrintMode.allCases) { value in
+                    Text(value.title).tag(value)
+                }
+            }
+            .pickerStyle(.segmented)
+            // Aucun des deux modes n'est meilleur en toutes circonstances:
+            // le detail dit le compromis.
+            Text(receiptMode.detail)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
             Button("print.receipt") {
                 sendReceipt()
             }
@@ -189,13 +201,15 @@ struct ContentView: View {
                 }
                 .labelsHidden()
                 Stepper(String(format: NSLocalizedString("text.size", comment: ""), textSize), value: $textSize, in: 1...4)
-                Toggle("text.bold", isOn: $textBold)
+                // Voir PrintToolsView: `ESC E` est sans effet sur ce firmware.
+                Text("text.boldUnsupported")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             Button("print.text") {
                 printer().print(
                     text: freeText,
                     size: textSize,
-                    bold: textBold,
                     alignment: textAlignment,
                     options: options()
                 )
@@ -313,11 +327,21 @@ struct ContentView: View {
                         .font(.title3.weight(.semibold))
                     // Largeur souple: l'apercu se reduit sur un ecran etroit
                     // au lieu d'imposer 384 px a toute la fenetre.
-                    ReceiptPreview(receipt: receipt, width: printerWidth.pixels)
-                        .frame(maxWidth: 384)
-                        .frame(height: 300)
-                        .background(Color.white)
-                        .border(Color.black.opacity(0.25))
+                    if receiptMode == .rasterImage {
+                        ReceiptPreview(receipt: receipt, width: printerWidth.pixels)
+                            .frame(maxWidth: 384)
+                            .frame(height: 300)
+                            .background(Color.white)
+                            .border(Color.black.opacity(0.25))
+                    } else {
+                        // L'apercu partage la mise en page de l'impression.
+                        Text(ReceiptDocument.preview(receipt, columns: options().textColumns))
+                            .font(.footnote.monospaced())
+                            .frame(maxWidth: 384, alignment: .leading)
+                            .padding(8)
+                            .background(Color.white)
+                            .border(Color.black.opacity(0.25))
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -385,6 +409,11 @@ struct ContentView: View {
     }
 
     private func sendReceipt() {
+        if receiptMode == .nativeText {
+            let document = ReceiptDocument.build(receipt, columns: options().textColumns)
+            transport.send(PrintJobBuilder.segments(document: document, options: options()))
+            return
+        }
         do {
             let bitmap = try renderer().render(receipt)
             transport.send(PrintJobBuilder.segments(bitmap: bitmap, options: options()))

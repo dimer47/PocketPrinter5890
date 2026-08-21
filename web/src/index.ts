@@ -58,6 +58,16 @@ export {
   type ReceiptItem,
   type ReceiptRenderOptions,
 } from './render/receipt.js';
+
+// Composition d'un ticket en texte natif: l'alternative au rendu image,
+// sans dependance au DOM.
+export {
+  ReceiptPrintMode,
+  receiptPrintModeTitle,
+  receiptPrintModeDetail,
+  buildReceiptDocument,
+  previewReceiptText,
+} from './protocol/receipt-document.js';
 export {
   bitmapFromCanvas,
   bitmapFromImage,

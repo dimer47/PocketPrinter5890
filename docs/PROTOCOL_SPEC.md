@@ -253,7 +253,7 @@ Working commands:
 ```
 1B 40                init / reset formatting
 1B 61 <n>            align: 0 left, 1 centre, 2 right
-1B 45 <n>            bold: 0 off, 1 on
+1B 45 <n>            bold: 0 off, 1 on — ACCEPTED, NO VISIBLE EFFECT (section 8)
 1B 2D <n>            underline: 0 none, 1 thin, 2 thick
 1D 21 <n>            character size: high nibble width, low nibble height,
                      0 = 1x, 1 = 2x, up to 7 = 8x
@@ -339,6 +339,7 @@ wastes time and paper.
 |---|---|
 | `1B 74 <n>` — code page | **Ignored.** Nine code pages tested, nine identical unreadable lines. Also leaks a stray byte into the output. |
 | Non-ASCII characters | **Solid block.** `°`, `é`, `è`, `à`, `û`, `ç` all print as a filled square regardless of declared code page. |
+| `1B 45 <n>` — bold | **No visible effect.** Verified on paper from two independent implementations (macOS/iOS and Android), each sending a correct `1B 45 01 … 1B 45 00`. |
 | `1D 42 <n>` — reverse video | No visible effect. |
 | `1D 28 6B ...` — QR code | **Printed as literal text.** Actual output: `k1A2k1Ck1E1k1P0https://...` |
 | `1D 6B ...` — barcode | **Printed as literal text.** Actual output: `<I{BMETEO2026` |
@@ -349,7 +350,28 @@ Transliterate to ASCII before sending: `18°C` becomes `18degC`, `café`
 becomes `cafe`, `12 €` becomes `12 EUR`. A slightly approximate line beats an
 unreadable one.
 
-### 8.2 Working around the code limitation
+### 8.2 Working around the text style limitation
+
+There is no native way to get bold on this firmware. Render the text to a
+bitmap and send it through `1D 76 30`, as with codes.
+
+This is what the vendor app does for **all** text, which is why it never needed
+`ESC E` to work. The trade-off is visible on paper: rasterised text is
+noticeably softer than the firmware's internal font, and a bitmap costs
+thousands of bytes where a text line costs a few dozen.
+
+Native text stays the better choice whenever plain, sharp characters are
+enough.
+
+**Use a hard threshold, not dithering.** Verified on paper: error diffusion
+turns every solid stroke into a scatter of dots, and the result prints thin
+and pale. Dithering only earns its place on photographs, where it simulates
+greys the printer cannot produce.
+
+Raise the threshold above the neutral 128 — around 160 works well. Antialiased
+text has grey edges, and a lower threshold drops them, thinning every letter.
+
+### 8.3 Working around the code limitation
 
 Generate QR codes and barcodes as bitmaps and send them through `1D 76 30`.
 This is what the vendor app does — it uses ZXing on the phone and never emits
@@ -383,7 +405,6 @@ When rasterising a code:
 10 FF 50 F1      battery
 10 FF 40         paper status
 1B 61 n          alignment
-1B 45 n          bold
 1D 21 n          character size
 ```
 

@@ -33,6 +33,7 @@ Safari.
 |---|---|
 | **[`docs/`](docs/)** | Specification du protocole — la reference, independante du langage |
 | **[`swift/`](swift/)** | Librairie Swift pour macOS, iOS et iPadOS, avec deux applications de demonstration |
+| **[`android/`](android/)** | Librairie Kotlin pour Android, avec une application de demonstration Compose |
 | **[`web/`](web/)** | Librairie TypeScript pour navigateur et Capacitor |
 
 La specification fait foi. Les deux implementations la suivent; en cas de
@@ -48,6 +49,9 @@ de Swift ni de TypeScript necessaire.
 
 **Developper une application Apple ?** Voir
 [`swift/README_FR.md`](swift/README_FR.md).
+
+**Vous developpez une application Android ?** Voir
+[`android/README_FR.md`](android/README_FR.md).
 
 **Developper pour le web ou avec Capacitor ?** Voir
 [`web/README_FR.md`](web/README_FR.md).

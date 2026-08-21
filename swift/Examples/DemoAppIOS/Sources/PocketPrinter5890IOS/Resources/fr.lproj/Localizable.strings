@@ -52,7 +52,7 @@
 /* Texte natif */
 "text.native" = "Texte natif (sans rasterisation)";
 "text.sample" = "BONJOUR\nCeci est un test de texte natif.";
-"text.bold" = "Gras";
+"text.boldUnsupported" = "Gras non supporté par ce firmware en texte natif.";
 "text.size" = "Taille %d";
 
 /* Apercu et console */
@@ -86,6 +86,7 @@
 "tab.console" = "Console";
 "devices.found" = "Peripheriques trouves";
 "devices.none" = "Aucun peripherique. Touchez Rechercher.";
+"receipt.mode" = "Mode d'impression";
 "preview.section" = "Apercu";
 "codes.section" = "Codes-barres et QR codes";
 "codes.content" = "Contenu";

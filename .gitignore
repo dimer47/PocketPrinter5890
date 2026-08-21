@@ -10,8 +10,20 @@ DerivedData/
 *.xcscmblueprint
 *.xccheckout
 
+# Android / Gradle
+android/build/
+android/*/build/
+android/.gradle/
+android/local.properties
+*.apk
+
 # macOS
 .DS_Store
 
 # Sauvegardes
 *.bak
+
+# SDK constructeur decompile — reference locale UNIQUEMENT.
+# Code proprietaire LuckPrinter: ne doit JAMAIS etre commite.
+# Le depot ne redistribue aucun code constructeur (voir README, section Licence).
+.reference-sdk/

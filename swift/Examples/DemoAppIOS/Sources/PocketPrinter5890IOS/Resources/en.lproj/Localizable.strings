@@ -52,7 +52,7 @@
 /* Texte natif */
 "text.native" = "Native text (no rasterisation)";
 "text.sample" = "HELLO\nThis is a native text test.";
-"text.bold" = "Bold";
+"text.boldUnsupported" = "Bold is not supported by this firmware in native text.";
 "text.size" = "Size %d";
 
 /* Apercu et console */
@@ -86,6 +86,7 @@
 "tab.console" = "Console";
 "devices.found" = "Devices found";
 "devices.none" = "No device yet. Tap Scan.";
+"receipt.mode" = "Print mode";
 "preview.section" = "Preview";
 "codes.section" = "Barcodes and QR codes";
 "codes.content" = "Content";

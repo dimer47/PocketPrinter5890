@@ -137,8 +137,12 @@ export function renderReceipt(
 ): MonochromeBitmap {
   const canvas = drawReceipt(receipt, options);
   // A hard threshold keeps text crisp; error diffusion would blur it.
+  //
+  // The level is raised above the neutral 128: antialiased text has grey
+  // edges that a lower threshold drops, which thins every stroke.
   return bitmapFromCanvas(canvas, {
     ...options,
     dither: options.dither ?? DitherMode.Threshold,
+    level: options.level ?? 160,
   });
 }
