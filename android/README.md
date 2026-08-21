@@ -84,11 +84,17 @@ rasterised, text is transliterated to ASCII.
 ## Status
 
 The protocol layer is covered by tests ported from the Swift suite and passing.
-The BLE transport and the demo app compile and lint clean, but **have not yet
-been run against a physical printer** — the hardware verification behind this
-repository was done on macOS and iOS. Reports from an Android device are
-welcome: [`TEST_MATERIEL.md`](TEST_MATERIEL.md) is a step-by-step procedure
-(in French) for testing against real hardware.
+
+**Verified on hardware**: connection, device info, native text, rasterised
+codes and receipts all print from a Pixel 7a (Android 17) on the reference
+printer. See [`TEST_MATERIEL.md`](TEST_MATERIEL.md) for the full results and a
+step-by-step procedure (in French) — reports from other phones or other
+printer models are welcome.
+
+One platform behaviour worth knowing: disconnecting takes about four seconds.
+Android does not drop the radio link when `disconnect()` is called; its stack
+waits for an L2CAP timer to expire, so the printer's LED stays on for a
+moment. iOS closes faster.
 
 Commands transcribed from the vendor SDK but never executed are marked as such
 in the source, exactly as in the Swift library.

@@ -1,13 +1,63 @@
 # Procédure de test sur imprimante réelle — Android
 
-Cette librairie compile, passe le lint, et ses 56 tests de protocole passent.
-Mais **rien n'a encore été imprimé depuis un appareil Android**. Ce document
-sert à établir ce qui marche, et à noter ce qui ne marche pas.
+La librairie a été **vérifiée sur matériel** : impression réelle depuis un
+Pixel 7a sous Android 17 sur l'imprimante de référence. Le tableau ci-dessous
+donne les résultats obtenus ; la procédure qui suit reste valable pour
+qui teste un autre téléphone ou un autre modèle d'imprimante.
 
 Règle du dépôt : ce qui n'est pas sorti sur papier n'est pas vérifié. Un test
 qui échoue est une information, pas un échec — notez-le.
 
 Comptez 20 à 30 minutes.
+
+---
+
+## Résultats obtenus
+
+| | |
+|---|---|
+| Téléphone | Pixel 7a |
+| Système | Android 17 (API 37) |
+| Imprimante | Mini Pocket Printer, modèle `A2Y`, firmware `V1.06LY` |
+| Profil BLE | `FF00 UART` |
+| MTU négocié | 240 — paquets de 180 octets |
+
+| Test | Résultat |
+|---|---|
+| 1 — Permissions et scan | Réussi. `Mini Pocket Printer_BLE` détecté |
+| 2 — Connexion et profil | Réussi. `FF00 UART`, MTU 240 |
+| 3 — Lecture des informations | Réussi. `A2Y`, `V1.06LY`, batterie correcte |
+| 4 — Première impression | Réussi |
+| 5 — Débit | Réussi. Aucun blocage sur les écritures GATT |
+| 6 — Codes rasterisés | Réussi. QR et code-barres scannés |
+| 7 — Accents et ticket | Réussi. Translittération conforme |
+| 8 — Reconnexion | Réussi |
+
+### Ce que ces tests ont corrigé
+
+Trois défauts, invisibles à la compilation, que seule l'impression a révélés.
+
+- **Commandes envoyées nues.** L'avance papier, les lectures et les réglages
+  partaient sans la séquence d'activation. Le firmware les acquittait puis les
+  ignorait : les champs Modèle et Firmware restaient vides, et le bouton de
+  dégagement papier n'avait aucun effet. La spécification le dit en section
+  3.1 — encore fallait-il le constater.
+- **Trame `AA 0D 0A`.** Émise spontanément en fin d'échange, elle était prise
+  pour une réponse. Elle consommait le contexte en attente, décalait toutes
+  les réponses suivantes, et son octet `0D` s'affichait comme « batterie
+  13 % ».
+- **Tramage par défaut.** Le rendu d'image utilisait Floyd-Steinberg. Sur du
+  texte, la diffusion d'erreur transforme chaque trait plein en semis de
+  points : le ticket sortait fin et pâle.
+
+### Comportements de plateforme, non corrigeables
+
+- **La déconnexion prend environ 4 secondes.** Android n'interrompt pas la
+  liaison radio à l'appel de `disconnect()` : la pile laisse expirer un
+  temporisateur L2CAP avant de fermer la connexion ACL
+  (`l2c_link_timeout`, mesuré sur Pixel 7a). La LED de l'imprimante reste
+  donc allumée un moment après l'appui. iOS ferme plus rapidement. Appeler
+  `close()` sans attendre accélère la coupure, sans la rendre immédiate.
 
 ---
 
@@ -95,9 +145,9 @@ Appuyez sur *Connecter* en face de l'imprimante.
 
 Dans logcat, vous devez voir une ligne `INFO MTU ... paquets de N octets`.
 
-**Notez la valeur de N** — c'est le premier chiffre à me remonter. Si N vaut
-20, la négociation du MTU a échoué et l'impression sera très lente sans être
-cassée pour autant.
+**Notez la valeur de N.** Elle vaut 240 sur Pixel 7a, soit des paquets de
+180 octets. Si N vaut 20, la négociation du MTU a échoué et l'impression sera
+très lente sans être cassée pour autant.
 
 **Si l'app affiche `Aucun profil compatible` :** logcat contient une ligne
 `Services vus: ...`. Copiez-la, elle dit exactement ce que la machine expose.
@@ -154,10 +204,13 @@ Onglet **Outils** → *Mire typographique*. **Chronométrez.**
 C'est le test le plus important pour Android, car il éprouve la sérialisation
 des écritures GATT, qui n'existe pas sous cette forme sur iOS.
 
+Aucun blocage constaté sur Pixel 7a.
+
 **Si l'impression est saccadée ou s'arrête en cours**, refaites-la avec les
 crédits désactivés (onglet Réglages → *Contrôle de flux par crédits*). Si cela
 change le comportement, le problème vient de l'articulation entre les crédits
-et le rappel d'écriture Android — dites-le-moi, c'est corrigible.
+et le rappel d'écriture Android : c'est corrigible, ouvrez une issue avec le
+journal.
 
 ---
 
@@ -203,9 +256,11 @@ Si la seconde impression se bloque, des crédits ont survécu à la déconnexion
 
 ---
 
-## Ce qu'il faut me remonter
+## Que rapporter
 
-Peu importe la forme, mais ces points sont utiles :
+Les retours depuis d'autres téléphones ou d'autres modèles d'imprimante sont
+bienvenus — ouvrez une issue. Peu importe la forme, mais ces points sont
+utiles :
 
 1. Modèle du téléphone et version d'Android
 2. La valeur du MTU (test 2)

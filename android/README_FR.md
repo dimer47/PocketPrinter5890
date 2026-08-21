@@ -88,11 +88,18 @@ ASCII.
 ## État
 
 La couche protocole est couverte par les tests portés depuis la suite Swift, et
-ils passent. Le transport BLE et l'application de démonstration compilent et
-passent le lint, mais **n'ont pas encore été confrontés à une imprimante
-physique** : la vérification matérielle de ce dépôt a été faite sur macOS et
-iOS. Les retours depuis un appareil Android sont bienvenus —
-[`TEST_MATERIEL.md`](TEST_MATERIEL.md) donne une procédure de test pas à pas.
+ils passent.
+
+**Vérifié sur matériel** : connexion, lecture des informations, texte natif,
+codes rasterisés et tickets s'impriment depuis un Pixel 7a (Android 17) sur
+l'imprimante de référence. [`TEST_MATERIEL.md`](TEST_MATERIEL.md) donne les
+résultats complets et la procédure pas à pas — les retours depuis d'autres
+téléphones ou d'autres modèles d'imprimante sont bienvenus.
+
+Un comportement de plateforme à connaître : la déconnexion prend environ
+quatre secondes. Android ne coupe pas la liaison radio à l'appel de
+`disconnect()` ; sa pile attend l'expiration d'un temporisateur L2CAP, et la
+LED de l'imprimante reste allumée un moment. iOS ferme plus rapidement.
 
 Les commandes transcrites du SDK constructeur mais jamais exécutées sont
 signalées comme telles dans le code, exactement comme dans la librairie Swift.

@@ -36,8 +36,8 @@ Safari.
 | **[`android/`](android/)** | Librairie Kotlin pour Android, avec une application de demonstration Compose |
 | **[`web/`](web/)** | Librairie TypeScript pour navigateur et Capacitor |
 
-La specification fait foi. Les deux implementations la suivent; en cas de
-divergence, c'est elle qui sert de reference pour en ecrire une troisieme.
+La specification fait foi. Les trois implementations la suivent; en cas de
+divergence, c'est elle qui sert de reference pour en ecrire une quatrieme.
 
 ## Par ou commencer
 
@@ -114,14 +114,15 @@ bitmaps.
 
 ## Etat
 
-| | Swift | TypeScript |
-|---|---|---|
-| Protocole, raster, ESC/POS | ✅ | ✅ |
-| Codes-barres (Code 128/39, EAN-13/8) | ✅ | ✅ |
-| QR codes | ✅ CoreImage | ✅ via `qrcode-generator` |
-| Rendu de ticket | ✅ CoreGraphics | ✅ Canvas |
-| Parite des applications de demonstration | ✅ macOS, iOS | ✅ navigateur |
-| Impression verifiee sur materiel | ✅ macOS + iPhone | ✅ Chrome |
+| | Swift | Kotlin | TypeScript |
+|---|---|---|---|
+| Protocole, raster, ESC/POS | ✅ | ✅ | ✅ |
+| Codes-barres (Code 128/39, EAN-13/8) | ✅ | ✅ | ✅ |
+| QR codes | ✅ CoreImage | ✅ ZXing | ✅ via `qrcode-generator` |
+| Rendu de ticket | ✅ CoreGraphics | ✅ android.graphics | ✅ Canvas |
+| Ticket en texte natif | ✅ | ✅ | ✅ |
+| Parite des applications de demonstration | ✅ macOS, iOS | ✅ Android | ✅ navigateur |
+| Impression verifiee sur materiel | ✅ macOS + iPhone | ✅ Pixel 7a | ✅ Chrome |
 
 Une vingtaine de commandes ont ete transcrites du SDK sans jamais etre
 executees sur ce firmware; elles sont signalees comme telles dans les deux

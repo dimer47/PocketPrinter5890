@@ -109,18 +109,19 @@ exposes no text or code printing at all, only bitmaps.
 
 ## Status
 
-| | Swift | TypeScript |
-|---|---|---|
-| Protocol, raster, ESC/POS | ✅ | ✅ |
-| Barcodes (Code 128/39, EAN-13/8) | ✅ | ✅ |
-| QR codes | ✅ CoreImage | ✅ via `qrcode-generator` |
-| Receipt rendering | ✅ CoreGraphics | ✅ Canvas |
-| Demo app feature parity | ✅ macOS, iOS | ✅ browser |
-| Printing verified on hardware | ✅ macOS + iPhone | ✅ Chrome |
+| | Swift | Kotlin | TypeScript |
+|---|---|---|---|
+| Protocol, raster, ESC/POS | ✅ | ✅ | ✅ |
+| Barcodes (Code 128/39, EAN-13/8) | ✅ | ✅ | ✅ |
+| QR codes | ✅ CoreImage | ✅ ZXing | ✅ via `qrcode-generator` |
+| Receipt rendering | ✅ CoreGraphics | ✅ android.graphics | ✅ Canvas |
+| Native text receipt | ✅ | ✅ | ✅ |
+| Demo app feature parity | ✅ macOS, iOS | ✅ Android | ✅ browser |
+| Printing verified on hardware | ✅ macOS + iPhone | ✅ Pixel 7a | ✅ Chrome |
 
 Roughly twenty commands were transcribed from the vendor SDK but never
-executed on this firmware; they are flagged as such in both implementations
-and in the specification.
+executed on this firmware; they are flagged as such in all three
+implementations and in the specification.
 
 Firmware update was deliberately left unimplemented: an untested port failing
 mid-write would leave the printer unusable.
