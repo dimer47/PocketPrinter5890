@@ -103,6 +103,23 @@ Ignoring this and pacing writes with a fixed delay instead divides throughput
 by roughly twenty — the difference between a receipt printing in two seconds
 and in forty.
 
+### 2.1 The `AA 0D 0A` service frame
+
+The printer also emits a three-byte frame of its own accord, at the end of an
+exchange:
+
+```
+AA 0D 0A
+```
+
+It answers nothing. **Treat it as noise**, exactly like a credit frame.
+
+Counting it as a reply is worse than it looks: it consumes the pending
+command's context, so every following reply gets attributed to the wrong
+request — the model arrives labelled as firmware, the firmware as paper
+status. Its `0D` byte also reads as a plausible `13`, which is how it once
+surfaced as "battery: 13 %".
+
 Two consequences that are easy to get wrong:
 
 - A `01 nn` frame must **not** be treated as the reply to a pending command.
@@ -462,6 +479,8 @@ Problems that look like hardware faults but are not.
 | End of receipt stuck under the lid | No clearance feed (section 4.3) |
 | Asymmetric side margins | Mechanical, not correctable (section 5.2) |
 | Battery reads 1% | `01 01` credit frame mistaken for the reply (section 2) |
+| Battery reads 13% | `AA 0D 0A` service frame mistaken for the reply (section 2.1) |
+| Model shows the firmware string, firmware shows paper status | A service frame consumed one pending context, shifting every reply by one (section 2.1) |
 | Worked once, then everything stalls | Stale credits kept across a reconnection (section 2) |
 | Still "connected" after switching the printer off | Disconnection event not handled (section 2) |
 
@@ -477,7 +496,9 @@ subscribe to FF01 and FF03
 credits = 0
 
 on notify(bytes):
-    if len(bytes) == 2 and bytes[0] == 0x01:
+    if bytes == AA 0D 0A:           # service frame: answers nothing
+        ignore
+    else if len(bytes) == 2 and bytes[0] == 0x01:
         credits += bytes[1]
 
 write(10 FF F1 03)                  # enable

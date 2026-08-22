@@ -380,6 +380,25 @@ Relever le seuil au-dessus de la valeur neutre de 128 — 160 donne un bon
 resultat. Le texte antialiase a des bords gris qu'un seuil plus bas efface,
 ce qui amaigrit chaque lettre.
 
+### Trame de service `AA 0D 0A`
+
+L'imprimante emet aussi d'elle-meme une trame de trois octets, en fin
+d'echange:
+
+```text
+AA 0D 0A
+```
+
+Elle ne repond a rien. **La traiter comme du bruit**, au meme titre qu'un
+credit de flux.
+
+La compter comme une reponse est plus grave qu'il n'y parait: elle consomme le
+contexte de la commande en attente, et toutes les reponses suivantes se
+retrouvent attribuees a la mauvaise requete — le modele arrive etiquete comme
+firmware, le firmware comme etat papier. Son octet `0D` se lit par ailleurs
+comme un `13` plausible, ce qui l'a fait apparaitre un temps en
+« batterie 13 % ».
+
 ### GS B, inversion video — NON IMPLEMENTEE
 
 Aucun effet visible: le texte sort en noir sur blanc comme d'habitude.
