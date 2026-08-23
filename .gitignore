@@ -27,3 +27,6 @@ android/local.properties
 # Code proprietaire LuckPrinter: ne doit JAMAIS etre commite.
 # Le depot ne redistribue aucun code constructeur (voir README, section Licence).
 .reference-sdk/
+
+# SwiftPM a la racine
+/.build/
