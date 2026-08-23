@@ -136,6 +136,14 @@ class TransliterationTest {
     }
 
     @Test
+    fun `les cases a cocher gardent leur etat`() {
+        // Une liste de taches copiee depuis une note garde sa forme.
+        assertEquals("[ ] Acheter du pain", Escpos.transliterate("\u2610 Acheter du pain"))
+        assertEquals("[x] Poster la lettre", Escpos.transliterate("\u2611 Poster la lettre"))
+        assertEquals("[x]", Escpos.transliterate("\u2612"))
+    }
+
+    @Test
     fun `les tirets typographiques deviennent des traits d'union`() {
         // Un editeur substitue de lui-meme le cadratin a deux traits d'union.
         for (scalaire in listOf('\u2010', '\u2011', '\u2012',

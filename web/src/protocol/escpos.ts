@@ -130,6 +130,11 @@ const REPLACEMENTS: Record<string, string> = {
   '\u2192': '->', '\u2190': '<-', '\u2194': '<->',
   '\u21D2': '=>', '\u221E': 'inf',
 
+  // Checkboxes: a task list copied from a note keeps its shape, and each
+  // box's state stays readable on paper.
+  '\u2610': '[ ]', '\u2611': '[x]', '\u2612': '[x]',
+  '\u25A2': '[ ]', '\u2751': '[ ]', '\u2752': '[ ]',
+
   // Solid symbols: with no ASCII equivalent, leave a visible mark rather
   // than a question mark.
   '\u2713': 'v', '\u2714': 'v', '\u2717': 'x', '\u2718': 'x',
@@ -167,9 +172,43 @@ export function transliterate(text: string): string {
     }
     // Strip diacritics: "é" -> "e", "ç" -> "c".
     const folded = character.normalize('NFD').replace(/[̀-ͯ]/g, '');
-    result += /^[\x20-\x7e]*$/.test(folded) && folded.length > 0 ? folded : '?';
+    if (/^[\x20-\x7e]*$/.test(folded) && folded.length > 0) {
+      result += folded;
+      continue;
+    }
+    result += categoryFallback(character);
   }
   return result;
+}
+
+/**
+ * What to do with a character no table covers.
+ *
+ * Listing characters one by one never ends: Unicode holds more than 150,000,
+ * and a word processor draws freely from them. So fall back on the
+ * character's category, which tells you its role.
+ *
+ * `?` stays for anything carrying meaning we cannot render — a letter from
+ * another alphabet, an ideogram: a blank would suggest the text is complete.
+ */
+function categoryFallback(character: string): string {
+  // Spaces of any width: one ordinary space.
+  if (/\p{Zs}|\p{Zl}|\p{Zp}/u.test(character)) return ' ';
+  // Control and formatting characters — joiners, direction marks, byte order
+  // mark. Invisible by nature: they must leave nothing on paper.
+  if (/\p{Cf}|\p{Cc}|\p{Cs}|\p{Co}|\p{Cn}/u.test(character)) return '';
+  // Orphan combining marks: the base character has already gone through, the
+  // accent alone has nothing to render.
+  if (/\p{Mn}|\p{Mc}|\p{Me}/u.test(character)) return '';
+  // Brackets and quotes: keep whichever half of the pair this is.
+  if (/\p{Ps}|\p{Pi}/u.test(character)) return '(';
+  if (/\p{Pe}|\p{Pf}/u.test(character)) return ')';
+  if (/\p{Pc}/u.test(character)) return '_';
+  // Bullets, arrows, pictographs, math and currency symbols: a visible mark
+  // beats a question mark, which reads as an error.
+  if (/\p{Po}|\p{Pd}|\p{So}|\p{Sm}|\p{Sk}|\p{Sc}/u.test(character)) return '-';
+  // Letters, digits and the rest: `?` honestly flags the lost character.
+  return '?';
 }
 
 /** Encodes text as ASCII bytes. Call {@link transliterate} first. */

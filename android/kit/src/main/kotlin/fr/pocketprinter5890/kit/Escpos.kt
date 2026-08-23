@@ -176,6 +176,11 @@ object Escpos {
         '\u2192' to "->", '\u2190' to "<-", '\u2194' to "<->",
         '\u21D2' to "=>", '\u221E' to "inf",
 
+        // Cases a cocher: une liste de taches copiee depuis une note garde
+        // sa forme, et l'etat de chaque case reste lisible sur le papier.
+        '\u2610' to "[ ]", '\u2611' to "[x]", '\u2612' to "[x]",
+        '\u25A2' to "[ ]", '\u2751' to "[ ]", '\u2752' to "[ ]",
+
         // Symboles pleins: sans equivalent ASCII, on garde une trace visible
         // plutot qu'un point d'interrogation.
         '\u2713' to "v", '\u2714' to "v", '\u2717' to "x", '\u2718' to "x",
@@ -201,24 +206,93 @@ object Escpos {
      */
     fun transliterate(text: String): String {
         val result = StringBuilder()
-        for (character in text) {
-            if (character.code < 128) {
-                result.append(character)
+        // Parcours par point de code: un `Char` ne fait que 16 bits, et un
+        // emoji arriverait en deux moities indechiffrables.
+        var index = 0
+        while (index < text.length) {
+            val point = text.codePointAt(index)
+            val largeur = Character.charCount(point)
+            val morceau = text.substring(index, index + largeur)
+            index += largeur
+
+            if (point < 128) {
+                result.append(morceau)
                 continue
             }
-            val replacement = asciiReplacements[character]
-            if (replacement != null) {
-                result.append(replacement)
-                continue
+            if (largeur == 1) {
+                val replacement = asciiReplacements[morceau[0]]
+                if (replacement != null) {
+                    result.append(replacement)
+                    continue
+                }
             }
             // Retrait des diacritiques: "é" -> "e", "ç" -> "c".
             val folded = java.text.Normalizer
-                .normalize(character.toString(), java.text.Normalizer.Form.NFD)
+                .normalize(morceau, java.text.Normalizer.Form.NFD)
                 .replace(Regex("\\p{Mn}+"), "")
-            result.append(if (folded.all { it.code < 128 } && folded.isNotEmpty()) folded else "?")
+            if (folded.all { it.code < 128 } && folded.isNotEmpty()) {
+                result.append(folded)
+                continue
+            }
+            result.append(categoryFallback(point))
         }
         return result.toString()
     }
+
+    /**
+     * Que faire d'un caractere qu'aucune table ne couvre.
+     *
+     * Enumerer les caracteres un par un ne finit jamais: Unicode en compte
+     * plus de 150 000, et un traitement de texte pioche largement. On se
+     * rabat donc sur la categorie du caractere, qui dit son role.
+     *
+     * Le « ? » reste pour ce qui porte un sens qu'on ne peut pas rendre —
+     * une lettre d'un autre alphabet, un ideogramme: un blanc laisserait
+     * croire a un texte complet.
+     */
+    private fun categoryFallback(codePoint: Int): String =
+        when (Character.getType(codePoint).toByte()) {
+            // Espaces de toute largeur: une espace ordinaire.
+            Character.SPACE_SEPARATOR,
+            Character.LINE_SEPARATOR,
+            Character.PARAGRAPH_SEPARATOR -> " "
+
+            // Caracteres de controle et de mise en forme — jointures,
+            // marques de direction, indicateur d'ordre des octets.
+            // Invisibles par nature: ils ne laissent rien sur le papier.
+            Character.FORMAT,
+            Character.CONTROL,
+            Character.SURROGATE,
+            Character.PRIVATE_USE,
+            Character.UNASSIGNED -> ""
+
+            // Marques combinantes orphelines: le caractere de base est deja
+            // passe, l'accent seul n'a rien a rendre.
+            Character.NON_SPACING_MARK,
+            Character.COMBINING_SPACING_MARK,
+            Character.ENCLOSING_MARK -> ""
+
+            // Puces, fleches, pictogrammes, symboles mathematiques ou
+            // monetaires: une trace visible vaut mieux qu'un point
+            // d'interrogation, qui se lit comme une erreur.
+            Character.OTHER_PUNCTUATION,
+            Character.DASH_PUNCTUATION,
+            Character.OTHER_SYMBOL,
+            Character.MATH_SYMBOL,
+            Character.MODIFIER_SYMBOL,
+            Character.CURRENCY_SYMBOL -> "-"
+
+            // Parentheses et guillemets: garder la paire ouvrante ou fermante.
+            Character.START_PUNCTUATION,
+            Character.INITIAL_QUOTE_PUNCTUATION -> "("
+            Character.END_PUNCTUATION,
+            Character.FINAL_QUOTE_PUNCTUATION -> ")"
+            Character.CONNECTOR_PUNCTUATION -> "_"
+
+            // Lettres, chiffres et le reste: un « ? » signale honnetement le
+            // caractere perdu.
+            else -> "?"
+        }
 
     private val cp1252: Charset = Charset.forName("windows-1252")
 

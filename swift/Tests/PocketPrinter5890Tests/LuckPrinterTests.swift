@@ -452,6 +452,43 @@ final class TransliterationTests: XCTestCase {
         XCTAssertEqual(ESCPOS.transliterate("\u{2713}"), "v")
     }
 
+    /// Une liste de taches copiee depuis une note garde sa forme.
+    func testCheckboxesKeepTheirState() {
+        XCTAssertEqual(ESCPOS.transliterate("\u{2610} Acheter du pain"), "[ ] Acheter du pain")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2611} Poster la lettre"), "[x] Poster la lettre")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2612}"), "[x]")
+    }
+
+    /// Les caracteres hors table sont classes par categorie Unicode.
+    ///
+    /// Les enumerer un par un ne finit jamais: Unicode en compte plus de
+    /// 150 000. La categorie dit le role du caractere, et suffit a decider.
+    func testCategoryFallback() {
+        // Puces et pictogrammes: une trace visible.
+        XCTAssertEqual(ESCPOS.transliterate("\u{25E6}"), "-", "puce creuse")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2023}"), "-", "puce triangulaire")
+        XCTAssertEqual(ESCPOS.transliterate("\u{25AA}"), "-", "carre plein")
+        XCTAssertEqual(ESCPOS.transliterate("\u{1F535}"), "-", "emoji rond")
+        // Espaces de toute largeur.
+        XCTAssertEqual(ESCPOS.transliterate("\u{3000}"), " ", "espace ideographique")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2028}"), " ", "separateur de ligne")
+        // Invisibles: rien sur le papier.
+        XCTAssertEqual(ESCPOS.transliterate("\u{FEFF}"), "", "marque d'ordre des octets")
+        XCTAssertEqual(ESCPOS.transliterate("\u{200D}"), "", "jointure de largeur nulle")
+    }
+
+    /// Ce qui porte un sens reste signale plutot que d'etre efface.
+    ///
+    /// Un blanc laisserait croire a un texte complet; le « ? » dit qu'il
+    /// manque quelque chose.
+    func testUnrenderableLettersKeepQuestionMark() {
+        for (nom, lettre) in [("cyrillique", "\u{0416}"), ("chinois", "\u{4E2D}"),
+                              ("arabe", "\u{0628}"), ("hebreu", "\u{05D0}"),
+                              ("grec", "\u{03B4}")] {
+            XCTAssertEqual(ESCPOS.transliterate(lettre), "?", nom)
+        }
+    }
+
     /// Un texte copie depuis une note ne doit laisser aucun « ? ».
     func testRealisticNoteLeavesNoQuestionMark() {
         let echantillon = """

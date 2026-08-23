@@ -187,9 +187,57 @@ public enum ESCPOS {
                 options: [.diacriticInsensitive],
                 locale: Locale(identifier: "fr_FR")
             )
-            result += folded.allSatisfy(\.isASCII) ? folded : "?"
+            if folded.allSatisfy(\.isASCII) {
+                result += folded
+                continue
+            }
+            result += Self.categoryFallback(for: character)
         }
         return result
+    }
+
+    /// Que faire d'un caractere qu'aucune table ne couvre.
+    ///
+    /// Enumerer les caracteres un par un ne finit jamais: Unicode en compte
+    /// plus de 150 000, et un traitement de texte pioche largement. On se
+    /// rabat donc sur la categorie du caractere, qui dit son role.
+    ///
+    /// Le « ? » reste pour ce qui porte un sens qu'on ne peut pas rendre —
+    /// une lettre d'un autre alphabet, un ideogramme: un blanc laisserait
+    /// croire a un texte complet.
+    private static func categoryFallback(for character: Character) -> String {
+        guard let scalar = character.unicodeScalars.first else { return "?" }
+        switch scalar.properties.generalCategory {
+        // Espaces de toute largeur: une espace ordinaire.
+        case .spaceSeparator, .lineSeparator, .paragraphSeparator:
+            return " "
+        // Caracteres de controle et de mise en forme — jointures, marques
+        // de direction, indicateur d'ordre des octets. Invisibles par
+        // nature: ils ne doivent rien laisser sur le papier.
+        case .format, .control, .surrogate, .privateUse, .unassigned:
+            return ""
+        // Marques combinantes orphelines: le caractere de base est deja
+        // passe, l'accent seul n'a rien a rendre.
+        case .nonspacingMark, .spacingMark, .enclosingMark:
+            return ""
+        // Puces, fleches, pictogrammes, symboles mathematiques ou
+        // monetaires: une trace visible vaut mieux qu'un point
+        // d'interrogation, qui se lit comme une erreur.
+        case .otherPunctuation, .dashPunctuation, .otherSymbol,
+             .mathSymbol, .modifierSymbol, .currencySymbol:
+            return "-"
+        // Parentheses et guillemets: garder la paire ouvrante ou fermante.
+        case .openPunctuation, .initialPunctuation:
+            return "("
+        case .closePunctuation, .finalPunctuation:
+            return ")"
+        case .connectorPunctuation:
+            return "_"
+        // Lettres, chiffres et le reste: un « ? » signale honnetement le
+        // caractere perdu.
+        default:
+            return "?"
+        }
     }
 
     /// Substitutions explicites pour les symboles courants.
@@ -233,6 +281,11 @@ public enum ESCPOS {
         "\u{2264}": "<=", "\u{2265}": ">=", "\u{2260}": "!=",
         "\u{2192}": "->", "\u{2190}": "<-", "\u{2194}": "<->",
         "\u{21D2}": "=>", "\u{221E}": "inf",
+
+        // Cases a cocher: une liste de taches copiee depuis une note garde
+        // sa forme, et l'etat de chaque case reste lisible sur le papier.
+        "\u{2610}": "[ ]", "\u{2611}": "[x]", "\u{2612}": "[x]",
+        "\u{25A2}": "[ ]", "\u{2751}": "[ ]", "\u{2752}": "[ ]",
 
         // Symboles pleins: sans equivalent ASCII, on garde une trace visible
         // plutot qu'un point d'interrogation.
