@@ -193,13 +193,60 @@ public enum ESCPOS {
     }
 
     /// Substitutions explicites pour les symboles courants.
+    ///
+    /// Sans entree ici, un caractere non ASCII sans diacritique a retirer
+    /// finit en « ? » sur le papier. Les traitements de texte en produisent
+    /// beaucoup sans qu'on les tape: espaces insecables avant les deux-points
+    /// en francais, tirets typographiques, guillemets courbes.
     private static let asciiReplacements: [Character: String] = [
-        "°": "deg", "€": "EUR", "£": "GBP", "¥": "JPY",
+        // Monnaies et unites
+        "°": "deg", "€": "EUR", "£": "GBP", "¥": "JPY", "¢": "c",
+        "\u{2116}": "No",
+
+        // Guillemets et apostrophes
         "«": "\"", "»": "\"", "\u{2018}": "'", "\u{2019}": "'",
-        "\u{201C}": "\"", "\u{201D}": "\"", "\u{2013}": "-", "\u{2014}": "-",
+        "\u{201C}": "\"", "\u{201D}": "\"", "\u{201A}": ",", "\u{201E}": "\"",
+        "\u{2039}": "<", "\u{203A}": ">",
+        "\u{2032}": "'", "\u{2033}": "\"",
+
+        // Tirets: la famille est large, et un traitement de texte substitue
+        // volontiers le cadratin a deux traits d'union.
+        "\u{2010}": "-", "\u{2011}": "-", "\u{2012}": "-",
+        "\u{2013}": "-", "\u{2014}": "-", "\u{2015}": "-",
+        "\u{2212}": "-", "\u{00AD}": "",
+
+        // Espaces: insecables et fines. Sans conversion, chacune devient un
+        // « ? » au milieu d'une phrase — le cas le plus visible en francais,
+        // ou l'espace insecable precede « : » et « » ».
+        "\u{00A0}": " ", "\u{202F}": " ", "\u{2009}": " ",
+        "\u{2007}": " ", "\u{2008}": " ", "\u{200A}": " ", "\u{2002}": " ",
+        "\u{2003}": " ", "\u{200B}": "",
+
+        // Ponctuation et signes
         "\u{2026}": "...", "×": "x", "÷": "/", "±": "+/-",
-        "¼": "1/4", "½": "1/2", "¾": "3/4", "²": "2", "³": "3",
-        "œ": "oe", "Œ": "OE", "æ": "ae", "Æ": "AE", "ß": "ss"
+        "\u{2044}": "/", "\u{00A7}": "S", "\u{00B6}": "P",
+        "\u{2020}": "+", "\u{2021}": "++", "\u{00B7}": "-",
+        "\u{2022}": "-", "\u{00A9}": "(c)", "\u{00AE}": "(R)",
+        "\u{2122}": "(TM)", "\u{00BF}": "?", "\u{00A1}": "!",
+
+        // Comparaisons et fleches
+        "\u{2264}": "<=", "\u{2265}": ">=", "\u{2260}": "!=",
+        "\u{2192}": "->", "\u{2190}": "<-", "\u{2194}": "<->",
+        "\u{21D2}": "=>", "\u{221E}": "inf",
+
+        // Symboles pleins: sans equivalent ASCII, on garde une trace visible
+        // plutot qu'un point d'interrogation.
+        "\u{2713}": "v", "\u{2714}": "v", "\u{2717}": "x", "\u{2718}": "x",
+        "\u{25CF}": "*", "\u{25CB}": "o", "\u{25A0}": "#", "\u{25A1}": "#",
+        "\u{2605}": "*", "\u{2606}": "*",
+
+        // Fractions et exposants
+        "¼": "1/4", "½": "1/2", "¾": "3/4", "\u{2153}": "1/3", "\u{2154}": "2/3",
+        "²": "2", "³": "3", "¹": "1",
+
+        // Ligatures
+        "œ": "oe", "Œ": "OE", "æ": "ae", "Æ": "AE", "ß": "ss",
+        "\u{0133}": "ij", "\u{0132}": "IJ"
     ]
 
     /// Encode du texte en CP1252 avec repli ASCII sur les caracteres non representables.

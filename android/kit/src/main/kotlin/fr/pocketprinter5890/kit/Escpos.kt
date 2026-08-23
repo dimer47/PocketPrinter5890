@@ -132,14 +132,64 @@ object Escpos {
         WPC1252(16, "WPC1252")
     }
 
-    /** Substitutions explicites pour les symboles courants. */
+    /**
+     * Substitutions explicites pour les symboles courants.
+     *
+     * Sans entree ici, un caractere non ASCII sans diacritique a retirer
+     * finit en « ? » sur le papier. Les traitements de texte en produisent
+     * beaucoup sans qu'on les tape: espaces insecables avant les deux-points
+     * en francais, tirets typographiques, guillemets courbes.
+     */
     private val asciiReplacements: Map<Char, String> = mapOf(
-        '°' to "deg", '€' to "EUR", '£' to "GBP", '¥' to "JPY",
-        '«' to "\"", '»' to "\"", '‘' to "'", '’' to "'",
-        '“' to "\"", '”' to "\"", '–' to "-", '—' to "-",
-        '…' to "...", '×' to "x", '÷' to "/", '±' to "+/-",
-        '¼' to "1/4", '½' to "1/2", '¾' to "3/4", '²' to "2", '³' to "3",
-        'œ' to "oe", 'Œ' to "OE", 'æ' to "ae", 'Æ' to "AE", 'ß' to "ss"
+        // Monnaies et unites
+        '\u00B0' to "deg", '\u20AC' to "EUR", '\u00A3' to "GBP", '\u00A5' to "JPY", '\u00A2' to "c",
+        '\u2116' to "No",
+
+        // Guillemets et apostrophes
+        '\u00AB' to "\"", '\u00BB' to "\"", '\u2018' to "'", '\u2019' to "'",
+        '\u201C' to "\"", '\u201D' to "\"", '\u201A' to ",", '\u201E' to "\"",
+        '\u2039' to "<", '\u203A' to ">",
+        '\u2032' to "'", '\u2033' to "\"",
+
+        // Tirets: la famille est large, et un traitement de texte substitue
+        // volontiers le cadratin a deux traits d'union.
+        '\u2010' to "-", '\u2011' to "-", '\u2012' to "-",
+        '\u2013' to "-", '\u2014' to "-", '\u2015' to "-",
+        '\u2212' to "-", '\u00AD' to "",
+
+        // Espaces: insecables et fines. Sans conversion, chacune devient un
+        // « ? » au milieu d'une phrase — le cas le plus visible en francais,
+        // ou l'espace insecable precede « : » et « » ».
+        '\u00A0' to " ", '\u202F' to " ", '\u2009' to " ",
+        '\u2007' to " ", '\u2008' to " ", '\u200A' to " ", '\u2002' to " ",
+        '\u2003' to " ", '\u200B' to "",
+
+        // Ponctuation et signes
+        '\u2026' to "...", '\u00D7' to "x", '\u00F7' to "/", '\u00B1' to "+/-",
+        '\u2044' to "/", '\u00A7' to "S", '\u00B6' to "P",
+        '\u2020' to "+", '\u2021' to "++", '\u00B7' to "-",
+        '\u2022' to "-", '\u00A9' to "(c)", '\u00AE' to "(R)",
+        '\u2122' to "(TM)", '\u00BF' to "?", '\u00A1' to "!",
+
+        // Comparaisons et fleches
+        '\u2264' to "<=", '\u2265' to ">=", '\u2260' to "!=",
+        '\u2192' to "->", '\u2190' to "<-", '\u2194' to "<->",
+        '\u21D2' to "=>", '\u221E' to "inf",
+
+        // Symboles pleins: sans equivalent ASCII, on garde une trace visible
+        // plutot qu'un point d'interrogation.
+        '\u2713' to "v", '\u2714' to "v", '\u2717' to "x", '\u2718' to "x",
+        '\u25CF' to "*", '\u25CB' to "o", '\u25A0' to "#", '\u25A1' to "#",
+        '\u2605' to "*", '\u2606' to "*",
+
+        // Fractions et exposants
+        '\u00BC' to "1/4", '\u00BD' to "1/2", '\u00BE' to "3/4",
+        '\u2153' to "1/3", '\u2154' to "2/3",
+        '\u00B2' to "2", '\u00B3' to "3", '\u00B9' to "1",
+
+        // Ligatures
+        '\u0153' to "oe", '\u0152' to "OE", '\u00E6' to "ae", '\u00C6' to "AE", '\u00DF' to "ss",
+        '\u0133' to "ij", '\u0132' to "IJ"
     )
 
     /**

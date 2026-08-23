@@ -416,4 +416,51 @@ final class TransliterationTests: XCTestCase {
         let text = ESCPOS.transliterate("18°C à Lille, café, août, ½ €")
         XCTAssertTrue(text.allSatisfy(\.isASCII))
     }
+
+    /// Les tirets typographiques, qu'un traitement de texte substitue de
+    /// lui-meme aux traits d'union.
+    func testDashesBecomeHyphen() {
+        for scalaire in ["\u{2010}", "\u{2011}", "\u{2012}",
+                         "\u{2013}", "\u{2014}", "\u{2015}", "\u{2212}"] {
+            XCTAssertEqual(ESCPOS.transliterate(scalaire), "-", scalaire.debugDescription)
+        }
+    }
+
+    /// Le cas le plus frequent en francais: l'espace insecable devant « : ».
+    ///
+    /// Invisible a l'ecran, elle sortait en « ? » au milieu de la phrase.
+    func testNonBreakingSpacesBecomeSpace() {
+        XCTAssertEqual(ESCPOS.transliterate("Matin\u{00A0}: 18 deg"), "Matin : 18 deg")
+        XCTAssertEqual(ESCPOS.transliterate("12\u{202F}345"), "12 345")
+        XCTAssertEqual(ESCPOS.transliterate("a\u{2009}b"), "a b")
+        // Largeur nulle: rien a imprimer, pas meme une espace.
+        XCTAssertEqual(ESCPOS.transliterate("a\u{200B}b"), "ab")
+        XCTAssertEqual(ESCPOS.transliterate("a\u{00AD}b"), "ab")
+    }
+
+    func testTypographicQuotes() {
+        XCTAssertEqual(ESCPOS.transliterate("\u{201C}cite\u{201D}"), "\"cite\"")
+        XCTAssertEqual(ESCPOS.transliterate("l\u{2019}heure"), "l'heure")
+        XCTAssertEqual(ESCPOS.transliterate("\u{00AB}mot\u{00BB}"), "\"mot\"")
+    }
+
+    func testCommonSymbols() {
+        XCTAssertEqual(ESCPOS.transliterate("\u{2022} item"), "- item")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2192}"), "->")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2264}"), "<=")
+        XCTAssertEqual(ESCPOS.transliterate("\u{00A9}"), "(c)")
+        XCTAssertEqual(ESCPOS.transliterate("\u{2713}"), "v")
+    }
+
+    /// Un texte copie depuis une note ne doit laisser aucun « ? ».
+    func testRealisticNoteLeavesNoQuestionMark() {
+        let echantillon = """
+        Rendez-vous \u{2014} 14\u{00A0}h\u{202F}30 \u{2022} caf\u{00E9} \u{00AB}\u{202F}Les Halles\u{202F}\u{00BB}
+        Temp\u{00E9}rature\u{00A0}: 21\u{00B0}C \u{2192} 26\u{00B0}C \u{2264} maximum
+        Co\u{00FB}t\u{00A0}: 12\u{202F}345,67\u{00A0}\u{20AC} \u{00A9} 2026 \u{2713}
+        """
+        let resultat = ESCPOS.transliterate(echantillon)
+        XCTAssertFalse(resultat.contains("?"), "non converti: \(resultat)")
+        XCTAssertTrue(resultat.allSatisfy(\.isASCII), "non ASCII: \(resultat)")
+    }
 }

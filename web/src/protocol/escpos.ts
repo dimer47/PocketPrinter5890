@@ -83,14 +83,67 @@ export const lineSpacing = (dots: number): number[] => [0x1b, 0x33, dots];
  */
 export const codePage = (page: number): number[] => [0x1b, 0x74, page];
 
-/** Symbol replacements applied before falling back to diacritic stripping. */
+/**
+ * Symbol replacements applied before falling back to diacritic stripping.
+ *
+ * Without an entry here, a non-ASCII character with no diacritic to strip
+ * ends up as `?` on paper. Word processors produce plenty of these without
+ * the user typing them: non-breaking spaces before colons in French,
+ * typographic dashes, curly quotes.
+ *
+ * Written as escapes rather than literals: several of these characters are
+ * indistinguishable from one another — or invisible — when read as source.
+ */
 const REPLACEMENTS: Record<string, string> = {
-  '°': 'deg', '€': 'EUR', '£': 'GBP', '¥': 'JPY',
-  '«': '"', '»': '"', '‘': "'", '’': "'",
-  '“': '"', '”': '"', '–': '-', '—': '-',
-  '…': '...', '×': 'x', '÷': '/', '±': '+/-',
-  '¼': '1/4', '½': '1/2', '¾': '3/4', '²': '2', '³': '3',
-  'œ': 'oe', 'Œ': 'OE', 'æ': 'ae', 'Æ': 'AE', 'ß': 'ss',
+  // Currency and units
+  '\u00B0': 'deg', '\u20AC': 'EUR', '\u00A3': 'GBP', '\u00A5': 'JPY',
+  '\u00A2': 'c', '\u2116': 'No',
+
+  // Quotes and apostrophes
+  '\u00AB': '"', '\u00BB': '"', '\u2018': "'", '\u2019': "'",
+  '\u201C': '"', '\u201D': '"', '\u201A': ',', '\u201E': '"',
+  '\u2039': '<', '\u203A': '>',
+  '\u2032': "'", '\u2033': '"',
+
+  // Dashes: a wide family, and word processors readily swap an em dash in
+  // for two hyphens.
+  '\u2010': '-', '\u2011': '-', '\u2012': '-',
+  '\u2013': '-', '\u2014': '-', '\u2015': '-',
+  '\u2212': '-', '\u00AD': '',
+
+  // Spaces: non-breaking and thin. Left alone, each one becomes a `?` in the
+  // middle of a sentence — most visible in French, where a non-breaking
+  // space precedes `:` and `»`.
+  '\u00A0': ' ', '\u202F': ' ', '\u2009': ' ',
+  '\u2007': ' ', '\u2008': ' ', '\u200A': ' ', '\u2002': ' ',
+  '\u2003': ' ', '\u200B': '',
+
+  // Punctuation and signs
+  '\u2026': '...', '\u00D7': 'x', '\u00F7': '/', '\u00B1': '+/-',
+  '\u2044': '/', '\u00A7': 'S', '\u00B6': 'P',
+  '\u2020': '+', '\u2021': '++', '\u00B7': '-',
+  '\u2022': '-', '\u00A9': '(c)', '\u00AE': '(R)',
+  '\u2122': '(TM)', '\u00BF': '?', '\u00A1': '!',
+
+  // Comparisons and arrows
+  '\u2264': '<=', '\u2265': '>=', '\u2260': '!=',
+  '\u2192': '->', '\u2190': '<-', '\u2194': '<->',
+  '\u21D2': '=>', '\u221E': 'inf',
+
+  // Solid symbols: with no ASCII equivalent, leave a visible mark rather
+  // than a question mark.
+  '\u2713': 'v', '\u2714': 'v', '\u2717': 'x', '\u2718': 'x',
+  '\u25CF': '*', '\u25CB': 'o', '\u25A0': '#', '\u25A1': '#',
+  '\u2605': '*', '\u2606': '*',
+
+  // Fractions and superscripts
+  '\u00BC': '1/4', '\u00BD': '1/2', '\u00BE': '3/4',
+  '\u2153': '1/3', '\u2154': '2/3',
+  '\u00B2': '2', '\u00B3': '3', '\u00B9': '1',
+
+  // Ligatures
+  '\u0153': 'oe', '\u0152': 'OE', '\u00E6': 'ae', '\u00C6': 'AE',
+  '\u00DF': 'ss', '\u0133': 'ij', '\u0132': 'IJ',
 };
 
 /**

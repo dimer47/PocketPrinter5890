@@ -134,6 +134,50 @@ class TransliterationTest {
         val result = Escpos.transliterate(source)
         assertTrue(result.all { it.code < 128 }, "Reste du non-ASCII: $result")
     }
+
+    @Test
+    fun `les tirets typographiques deviennent des traits d'union`() {
+        // Un editeur substitue de lui-meme le cadratin a deux traits d'union.
+        for (scalaire in listOf('\u2010', '\u2011', '\u2012',
+                                '\u2013', '\u2014', '\u2015', '\u2212')) {
+            assertEquals("-", Escpos.transliterate(scalaire.toString()),
+                "U+%04X".format(scalaire.code))
+        }
+    }
+
+    @Test
+    fun `les espaces insecables deviennent des espaces`() {
+        // Le cas le plus frequent en francais: invisible a l'ecran, cette
+        // espace sortait en « ? » au milieu de la phrase.
+        assertEquals("Matin : 18 deg", Escpos.transliterate("Matin\u00A0: 18 deg"))
+        assertEquals("12 345", Escpos.transliterate("12\u202F345"))
+        assertEquals("a b", Escpos.transliterate("a\u2009b"))
+        // Largeur nulle: rien a imprimer, pas meme une espace.
+        assertEquals("ab", Escpos.transliterate("a\u200Bb"))
+        assertEquals("ab", Escpos.transliterate("a\u00ADb"))
+    }
+
+    @Test
+    fun `les symboles sans equivalent gardent une trace visible`() {
+        assertEquals("- item", Escpos.transliterate("\u2022 item"))
+        assertEquals("->", Escpos.transliterate("\u2192"))
+        assertEquals("<=", Escpos.transliterate("\u2264"))
+        assertEquals("(c)", Escpos.transliterate("\u00A9"))
+        assertEquals("v", Escpos.transliterate("\u2713"))
+    }
+
+    @Test
+    fun `une note reelle ne laisse aucun point d'interrogation`() {
+        val echantillon = buildString {
+            append("Rendez-vous \u2014 14\u00A0h\u202F30 \u2022 caf\u00E9 ")
+            append("\u00AB\u202FLes Halles\u202F\u00BB\n")
+            append("Temp\u00E9rature\u00A0: 21\u00B0C \u2192 26\u00B0C \u2264 maximum\n")
+            append("Co\u00FBt\u00A0: 12\u202F345,67\u00A0\u20AC \u00A9 2026 \u2713")
+        }
+        val resultat = Escpos.transliterate(echantillon)
+        assertFalse(resultat.contains("?"), "non converti: $resultat")
+        assertTrue(resultat.all { it.code < 128 }, "non ASCII: $resultat")
+    }
 }
 
 class TextLayoutTest {
