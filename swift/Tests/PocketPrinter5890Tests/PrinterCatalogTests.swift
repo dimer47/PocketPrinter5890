@@ -69,6 +69,24 @@ final class PrinterCatalogTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(BrotherMedia.self, from: data), media)
     }
 
+    func testBlackMarkRollIsOfferedAndRoundTrips() throws {
+        let presets = BrotherModel.TD_4550DNWB.paperPresets
+        XCTAssertTrue(presets.contains { $0.kind == .markRoll })
+        XCTAssertEqual(Set(presets.map(\.kind)), [.roll, .dieCut, .markRoll])
+
+        let paper = BrotherPaper.markRoll(widthMM: 102, lengthMM: 152, markOffsetMM: 2, markLengthMM: 4)
+        XCTAssertTrue(paper.kind.hasFixedLength)
+        let data = try JSONEncoder().encode(BrotherMedia.custom(paper))
+        XCTAssertEqual(try JSONDecoder().decode(BrotherMedia.self, from: data), .custom(paper))
+    }
+
+    func testPaperSavedBeforeBlackMarkSupportStillLoads() throws {
+        // Format enregistre par la version precedente, sans champs mark*.
+        let legacy = #"{"kind":"dieCut","widthMM":102,"lengthMM":152,"gapMM":3,"marginMM":1.5}"#
+        let paper = try JSONDecoder().decode(BrotherPaper.self, from: Data(legacy.utf8))
+        XCTAssertEqual(paper, .dieCut(widthMM: 102, lengthMM: 152))
+    }
+
     func testRasterizerScalesWithoutChangingLayout() throws {
         var document = PrintDocument()
         document.append(.title("BROTHER"))

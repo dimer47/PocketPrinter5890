@@ -194,7 +194,8 @@ struct PaperChoiceSection: View {
     }
 }
 
-/// Rouleau ou etiquettes predecoupees, pour les TD et RJ.
+/// Rouleau continu, etiquettes predecoupees ou rouleau a marque noire,
+/// pour les TD et RJ.
 struct CustomPaperEditor: View {
     let model: BrotherModel
     @Binding var media: BrotherMedia
@@ -212,19 +213,33 @@ struct CustomPaperEditor: View {
         Picker("paper.kind", selection: binding(\.kind)) {
             Text("paper.kind.roll").tag(BrotherPaper.Kind.roll)
             Text("paper.kind.dieCut").tag(BrotherPaper.Kind.dieCut)
+            Text("paper.kind.markRoll").tag(BrotherPaper.Kind.markRoll)
         }
         .pickerStyle(.segmented)
 
         Stepper(value: binding(\.widthMM), in: 10...model.maxPaperWidthMM, step: 1) {
             Text(String(format: NSLocalizedString("paper.width", comment: ""), paper.widthMM))
         }
-        if paper.kind == .dieCut {
+        if paper.kind.hasFixedLength {
             Stepper(value: binding(\.lengthMM), in: 10...1000, step: 1) {
                 Text(String(format: NSLocalizedString("paper.length", comment: ""), paper.lengthMM))
             }
+        }
+        if paper.kind == .dieCut {
             Stepper(value: binding(\.gapMM), in: 0...20, step: 0.5) {
                 Text(String(format: NSLocalizedString("paper.gap", comment: ""), paper.gapMM))
             }
+        }
+        if paper.kind == .markRoll {
+            Stepper(value: binding(\.markOffsetMM), in: 0...max(0, paper.lengthMM), step: 0.5) {
+                Text(String(format: NSLocalizedString("paper.markOffset", comment: ""), paper.markOffsetMM))
+            }
+            Stepper(value: binding(\.markLengthMM), in: 1...20, step: 0.5) {
+                Text(String(format: NSLocalizedString("paper.markLength", comment: ""), paper.markLengthMM))
+            }
+            Text("paper.markRoll.hint")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         Stepper(value: binding(\.marginMM), in: 0...10, step: 0.5) {
             Text(String(format: NSLocalizedString("paper.margin", comment: ""), paper.marginMM))
@@ -242,6 +257,9 @@ struct CustomPaperEditor: View {
             return String(format: NSLocalizedString("paper.roll.title", comment: ""), paper.widthMM)
         case .dieCut:
             return String(format: NSLocalizedString("paper.dieCut.title", comment: ""),
+                          paper.widthMM, paper.lengthMM)
+        case .markRoll:
+            return String(format: NSLocalizedString("paper.markRoll.title", comment: ""),
                           paper.widthMM, paper.lengthMM)
         }
     }
@@ -263,10 +281,18 @@ struct CustomPaperEditor: View {
             set: { value in
                 var updated = paper
                 updated[keyPath: keyPath] = value
-                if updated.kind == .dieCut, updated.lengthMM <= 0 {
+                // En passant d'un rouleau continu a un papier de longueur
+                // fixe, il faut des valeurs de depart plausibles.
+                if updated.kind.hasFixedLength, updated.lengthMM <= 0 {
                     updated.lengthMM = updated.widthMM
+                }
+                if updated.kind == .dieCut, updated.gapMM <= 0 {
                     updated.gapMM = 3
                 }
+                if updated.kind == .markRoll, updated.markLengthMM <= 0 {
+                    updated.markLengthMM = 3
+                }
+                updated.markOffsetMM = min(updated.markOffsetMM, updated.lengthMM)
                 media = .custom(updated)
             }
         )

@@ -118,8 +118,8 @@
 "paper.preset" = "Format";
 "paper.custom" = "Personnalisé";
 "paper.kind" = "Type";
-"paper.kind.roll" = "Rouleau continu";
-"paper.kind.dieCut" = "Étiquettes";
+"paper.kind.roll" = "Continu";
+"paper.kind.dieCut" = "Prédécoupé";
 "paper.roll.title" = "Rouleau %g mm";
 "paper.dieCut.title" = "Étiquettes %g × %g mm";
 "paper.width" = "Largeur %g mm";
@@ -127,6 +127,11 @@
 "paper.gap" = "Espace entre étiquettes %g mm";
 "paper.margin" = "Marges %g mm";
 "paper.label" = "Étiquette / ruban";
+"paper.kind.markRoll" = "Marque noire";
+"paper.markRoll.title" = "Marque noire %g × %g mm";
+"paper.markOffset" = "Position de la marque %g mm";
+"paper.markLength" = "Hauteur de la marque %g mm";
+"paper.markRoll.hint" = "Rouleau dont chaque étiquette est repérée par une marque noire au dos. Position: décalage de la marque depuis le début de l'étiquette.";
 "paper.sheet" = "Feuille";
 "paper.fixed" = "Format imposé par le modèle.";
 

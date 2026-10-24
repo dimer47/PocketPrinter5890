@@ -340,32 +340,37 @@ public enum BrotherModel: String, CaseIterable, Identifiable, Codable, Sendable 
                 .roll(widthMM: 58),
                 .dieCut(widthMM: 102, lengthMM: 152),
                 .dieCut(widthMM: 102, lengthMM: 51),
-                .dieCut(widthMM: 51, lengthMM: 26)
+                .dieCut(widthMM: 51, lengthMM: 26),
+                .markRoll(widthMM: 102, lengthMM: 152)
             ]
         case "TD-2":
             return [
                 .roll(widthMM: 58),
                 .roll(widthMM: 51),
                 .dieCut(widthMM: 40, lengthMM: 40),
-                .dieCut(widthMM: 51, lengthMM: 26)
+                .dieCut(widthMM: 51, lengthMM: 26),
+                .markRoll(widthMM: 58, lengthMM: 40)
             ]
         case "RJ-4":
             return [
                 .roll(widthMM: 102),
                 .roll(widthMM: 58),
-                .dieCut(widthMM: 102, lengthMM: 152)
+                .dieCut(widthMM: 102, lengthMM: 152),
+                .markRoll(widthMM: 102, lengthMM: 152)
             ]
         case "RJ-3":
             return [
                 .roll(widthMM: 80),
                 .roll(widthMM: 76),
-                .dieCut(widthMM: 76, lengthMM: 44)
+                .dieCut(widthMM: 76, lengthMM: 44),
+                .markRoll(widthMM: 76, lengthMM: 44)
             ]
         default: // RJ-2
             return [
                 .roll(widthMM: 58),
                 .roll(widthMM: 50),
-                .dieCut(widthMM: 50, lengthMM: 85)
+                .dieCut(widthMM: 50, lengthMM: 85),
+                .markRoll(widthMM: 58, lengthMM: 85)
             ]
         }
     }
@@ -402,25 +407,65 @@ public struct BrotherPaper: Hashable, Codable, Sendable, Identifiable {
     public enum Kind: String, Codable, Sendable {
         /// Rouleau continu: la longueur suit le contenu.
         case roll
-        /// Etiquettes predecoupees, separees par un espace.
+        /// Etiquettes predecoupees, separees par un espace que le capteur
+        /// de l'imprimante detecte.
         case dieCut
+        /// Rouleau a marque noire: chaque etiquette, de longueur fixe, est
+        /// reperee par une marque noire imprimee au dos du papier.
+        case markRoll
+
+        /// Vrai si le papier a une longueur d'etiquette fixe.
+        public var hasFixedLength: Bool { self != .roll }
     }
 
     public var kind: Kind
     public var widthMM: Double
-    /// Longueur d'une etiquette, ignoree pour un rouleau.
+    /// Longueur d'une etiquette, ignoree pour un rouleau continu.
     public var lengthMM: Double
-    /// Espace entre deux etiquettes, ignore pour un rouleau.
+    /// Espace entre deux etiquettes, utilise seulement en `dieCut`.
     public var gapMM: Double
     /// Marge appliquee sur les quatre cotes.
     public var marginMM: Double
+    /// Decalage vertical de la marque noire par rapport au debut de
+    /// l'etiquette (`markPosition` dans le SDK). Utilise en `markRoll`.
+    public var markOffsetMM: Double
+    /// Hauteur de la marque noire (`markHeight` dans le SDK). Utilise en
+    /// `markRoll`.
+    public var markLengthMM: Double
 
-    public init(kind: Kind, widthMM: Double, lengthMM: Double = 0, gapMM: Double = 0, marginMM: Double = 1.5) {
+    public init(
+        kind: Kind,
+        widthMM: Double,
+        lengthMM: Double = 0,
+        gapMM: Double = 0,
+        marginMM: Double = 1.5,
+        markOffsetMM: Double = 0,
+        markLengthMM: Double = 0
+    ) {
         self.kind = kind
         self.widthMM = widthMM
         self.lengthMM = lengthMM
         self.gapMM = gapMM
         self.marginMM = marginMM
+        self.markOffsetMM = markOffsetMM
+        self.markLengthMM = markLengthMM
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, widthMM, lengthMM, gapMM, marginMM, markOffsetMM, markLengthMM
+    }
+
+    /// Les papiers enregistres avant l'ajout de la marque noire n'ont pas
+    /// les champs `mark*`: ils restent lisibles.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(Kind.self, forKey: .kind)
+        widthMM = try container.decode(Double.self, forKey: .widthMM)
+        lengthMM = try container.decodeIfPresent(Double.self, forKey: .lengthMM) ?? 0
+        gapMM = try container.decodeIfPresent(Double.self, forKey: .gapMM) ?? 0
+        marginMM = try container.decodeIfPresent(Double.self, forKey: .marginMM) ?? 1.5
+        markOffsetMM = try container.decodeIfPresent(Double.self, forKey: .markOffsetMM) ?? 0
+        markLengthMM = try container.decodeIfPresent(Double.self, forKey: .markLengthMM) ?? 0
     }
 
     public static func roll(widthMM: Double) -> BrotherPaper {
@@ -432,10 +477,25 @@ public struct BrotherPaper: Hashable, Codable, Sendable, Identifiable {
         BrotherPaper(kind: .dieCut, widthMM: widthMM, lengthMM: lengthMM, gapMM: gapMM)
     }
 
+    /// Valeurs de depart pour la marque: au debut de l'etiquette, 3 mm de
+    /// haut. A ajuster selon le rouleau.
+    public static func markRoll(
+        widthMM: Double,
+        lengthMM: Double,
+        markOffsetMM: Double = 0,
+        markLengthMM: Double = 3
+    ) -> BrotherPaper {
+        BrotherPaper(kind: .markRoll, widthMM: widthMM, lengthMM: lengthMM,
+                     markOffsetMM: markOffsetMM, markLengthMM: markLengthMM)
+    }
+
     public var id: String {
         switch kind {
         case .roll: return "roll-\(Self.format(widthMM))"
         case .dieCut: return "diecut-\(Self.format(widthMM))x\(Self.format(lengthMM))-gap\(Self.format(gapMM))"
+        case .markRoll:
+            return "mark-\(Self.format(widthMM))x\(Self.format(lengthMM))"
+                + "-at\(Self.format(markOffsetMM))-h\(Self.format(markLengthMM))"
         }
     }
 

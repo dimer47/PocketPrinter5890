@@ -118,8 +118,8 @@
 "paper.preset" = "Size";
 "paper.custom" = "Custom";
 "paper.kind" = "Type";
-"paper.kind.roll" = "Continuous roll";
-"paper.kind.dieCut" = "Labels";
+"paper.kind.roll" = "Continuous";
+"paper.kind.dieCut" = "Die-cut";
 "paper.roll.title" = "%g mm roll";
 "paper.dieCut.title" = "%g × %g mm labels";
 "paper.width" = "Width %g mm";
@@ -127,6 +127,11 @@
 "paper.gap" = "Gap between labels %g mm";
 "paper.margin" = "Margins %g mm";
 "paper.label" = "Label / tape";
+"paper.kind.markRoll" = "Black mark";
+"paper.markRoll.title" = "Black mark %g × %g mm";
+"paper.markOffset" = "Mark position %g mm";
+"paper.markLength" = "Mark height %g mm";
+"paper.markRoll.hint" = "Roll where each label is located by a black mark printed on the back. Position: offset of the mark from the start of the label.";
 "paper.sheet" = "Sheet";
 "paper.fixed" = "Size is fixed by the model.";
 

@@ -461,6 +461,13 @@ enum BrotherSDKBridge {
                                        margins: margins,
                                        gapLength: CGFloat(paper.gapMM),
                                        unitOfLength: .mm)
+        case .markRoll:
+            return BRLMCustomPaperSize(markRollWithTapeWidth: CGFloat(paper.widthMM),
+                                       tapeLength: CGFloat(paper.lengthMM),
+                                       margins: margins,
+                                       markPosition: CGFloat(paper.markOffsetMM),
+                                       markHeight: CGFloat(paper.markLengthMM),
+                                       unitOfLength: .mm)
         }
     }
 

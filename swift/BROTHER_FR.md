@@ -30,6 +30,19 @@ trois étapes:
    | Brother PJ | A4, Letter, Legal, A5 |
    | Brother MW | format imposé par le modèle |
 
+   Pour les TD et RJ, trois types de papier, comme dans le SDK
+   (`BRLMCustomPaperSize`):
+
+   | Type | Réglages | Appel SDK |
+   |---|---|---|
+   | Continu | largeur | `rollWithTapeWidth` |
+   | Prédécoupé | largeur, longueur d'étiquette, espace entre étiquettes | `dieCutWithTapeWidth` |
+   | Marque noire | largeur, longueur d'étiquette, position et hauteur de la marque | `markRollWithTapeWidth` |
+
+   La marque noire est imprimée au dos du rouleau; sa position se mesure
+   depuis le début de l'étiquette. Valeurs de départ: position 0 mm,
+   hauteur 3 mm, à ajuster selon le rouleau.
+
    Changer de modèle remet un papier compatible si l'ancien ne l'est plus.
 3. **Coupe et copies** (Brother).
 
@@ -128,7 +141,10 @@ SDK 4.13.2 et l'application d'exemple Swift de Brother. Elle n'a pas encore
   téléphone pendant la recherche.
 - La recherche BLE renvoie bien « Brother TD-4550DNWB » et un nom local.
 - Le papier choisi correspond au rouleau chargé, et l'imprimante a été
-  calibrée pour ce papier (capteur d'espace pour les étiquettes).
+  calibrée pour ce papier (capteur d'espace pour le prédécoupé, capteur
+  de marque pour la marque noire).
+- Rouleau à marque noire: l'impression démarre au bon endroit de chaque
+  étiquette; sinon, ajuster la position de la marque.
 - Massicot installé: coupe automatique, coupe toutes les N et coupe en fin
   se comportent comme décrit, avec 1 puis plusieurs copies.
 - Massicot absent: coupe activée, noter la réponse de l'imprimante (aucune
