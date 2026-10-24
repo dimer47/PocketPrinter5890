@@ -240,6 +240,11 @@ verifiable without touching system settings.
 tabs — connection, receipt, printing, settings, console — with the same
 feature set adapted to touch.
 
+The iOS app also drives **Brother** printers (notably the TD-4550DNWB over
+Bluetooth LE) through the Brother Print SDK: pick the printer first, then
+the paper it accepts, then cutting. The SDK is not bundled; see
+[`BROTHER_FR.md`](BROTHER_FR.md) (French) for how to add it.
+
 > Verified on a physical iPhone: discovery, connection and printing all work.
 > Note that the simulator has no Bluetooth, so only a real device can talk to
 > the printer. Running it on hardware requires selecting a development team in

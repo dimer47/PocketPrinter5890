@@ -4,6 +4,8 @@ import SwiftUI
 
 struct PrintToolsView: View {
     @ObservedObject var transport: PocketPrinter5890BLE
+    @ObservedObject var setup: PrinterSetup
+    @ObservedObject var brother: BrotherPrinterService
     @Binding var options: PrintOptions
 
     @State private var freeText = NSLocalizedString("text.sample", comment: "")
@@ -29,84 +31,77 @@ struct PrintToolsView: View {
                 // Pas d'interrupteur « gras »: le firmware A2Y accepte
                 // `ESC E` sans l'appliquer, constate sur papier ici et sur
                 // Android. Un reglage sans effet ferait croire a une panne.
-                Text("text.boldUnsupported")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                Button("print.text") {
-                    printer().print(
-                        text: freeText,
-                        size: textSize,
-                        alignment: textAlignment,
-                        options: options
-                    )
+                if !dispatcher.isBrother {
+                    Text("text.boldUnsupported")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
-                .disabled(!transport.isConnected || freeText.isEmpty)
+                Button("print.text") {
+                    dispatcher.print(text: freeText, size: textSize, alignment: textAlignment)
+                }
+                .disabled(!dispatcher.isReady || freeText.isEmpty)
             }
 
             Section("codes.section") {
                 TextField("codes.content", text: $codeContent)
                 Button("codes.qr") { printQR() }
-                    .disabled(!transport.isConnected || codeContent.isEmpty)
+                    .disabled(!dispatcher.isReady || codeContent.isEmpty)
                 Button("codes.barcode") { printBarcode() }
-                    .disabled(!transport.isConnected || codeContent.isEmpty)
+                    .disabled(!dispatcher.isReady || codeContent.isEmpty)
             }
 
             Section("demos.section") {
                 Button("demo.weather") {
-                    printer().print(DemoDocuments.weatherAndHoroscope(), options: options)
+                    dispatcher.print(DemoDocuments.weatherAndHoroscope())
                 }
                 Button("demo.typography") {
-                    printer().print(DemoDocuments.typographySampler(), options: options)
+                    dispatcher.print(DemoDocuments.typographySampler())
                 }
-                Button("print.pattern") { printPattern() }
-                Button("demo.codePages") {
-                    printer().print(DemoDocuments.codePageProbe(), options: options)
+                Button("print.pattern") { dispatcher.printTestPattern() }
+                // Sonde des pages de code du firmware 5890: sans objet
+                // pour une imprimante qui recoit une image.
+                if !dispatcher.isBrother {
+                    Button("demo.codePages") {
+                        dispatcher.print(DemoDocuments.codePageProbe())
+                    }
                 }
             }
-            .disabled(!transport.isConnected)
+            .disabled(!dispatcher.isReady)
 
-            Section {
-                Button("print.clearPaper") {
-                    printer().print(PrintDocument(), options: options)
+            // Un travail vide fait avancer le papier de la 5890; une
+            // Brother n'en a pas besoin.
+            if !dispatcher.isBrother {
+                Section {
+                    Button("print.clearPaper") {
+                        dispatcher.print(PrintDocument())
+                    }
+                    .disabled(!dispatcher.isReady)
                 }
-                .disabled(!transport.isConnected)
             }
         }
         .navigationTitle("tab.tools")
     }
 
-    private func printer() -> PocketPrinter {
-        PocketPrinter(transport: transport, options: options)
+    private var dispatcher: PrintDispatcher {
+        PrintDispatcher(setup: setup, transport: transport, brother: brother, options: options)
     }
 
     private func printQR() {
-        guard let element = try? PrintElement.qr(codeContent, printWidth: options.width.pixels) else {
+        guard let element = try? PrintElement.qr(codeContent, printWidth: dispatcher.layoutWidth) else {
             return
         }
-        printer().print(PrintDocument(elements: [element]), options: options)
+        dispatcher.print(PrintDocument(elements: [element]))
     }
 
     private func printBarcode() {
         // Code 128 accepte tout l'ASCII imprimable, contrairement aux
         // symbologies numeriques.
         guard let element = try? PrintElement.code(
-            codeContent, symbology: .code128, printWidth: options.width.pixels
+            codeContent, symbology: .code128, printWidth: dispatcher.layoutWidth
         ) else {
-            transport.recordLocalError(NSLocalizedString("codes.invalid", comment: ""))
+            dispatcher.reportError(NSLocalizedString("codes.invalid", comment: ""))
             return
         }
-        printer().print(PrintDocument(elements: [element]), options: options)
-    }
-
-    private func printPattern() {
-        do {
-            let bitmap = try ReceiptRenderer(width: options.width.pixels).testPattern(height: 120)
-            transport.send(PrintJobBuilder.segments(bitmap: bitmap, options: options))
-        } catch {
-            transport.recordLocalError(
-                String(format: NSLocalizedString("error.pattern", comment: ""),
-                       error.localizedDescription)
-            )
-        }
+        dispatcher.print(PrintDocument(elements: [element]))
     }
 }

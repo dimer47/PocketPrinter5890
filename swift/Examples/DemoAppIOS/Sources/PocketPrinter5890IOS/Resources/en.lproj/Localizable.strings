@@ -99,3 +99,93 @@
 "settings.transport" = "BLE transport";
 "settings.device" = "Printer settings";
 "settings.alignment" = "Alignment";
+
+/* Printer choice (step 1) */
+"printer.step1" = "1. Printer";
+"printer.brand" = "Printer type";
+"printer.brand.pocket" = "Pocket 5890";
+"printer.brand.brother" = "Brother";
+"printer.pocket.detail" = "SilverCrest / Tronic / Parkside (Lidl) pocket printer, BLE, 58 mm receipt paper.";
+"printer.brother.detail" = "Brother printers driven by the Brother Print SDK (TD, RJ, QL, PT, PJ, MW).";
+"printer.model" = "Model";
+"printer.onlyBLE" = "Bluetooth LE models only";
+"printer.connections.none" = "No documented iOS interface";
+"printer.noBLE" = "No Bluetooth LE on this model according to the SDK: connect over Wi-Fi.";
+"printer.noIOSConnection" = "The SDK documents no iOS interface this app supports for this model (USB, Android or Bluetooth Classic MFi only).";
+
+/* Paper (step 2) */
+"paper.step2" = "2. Paper";
+"paper.preset" = "Size";
+"paper.custom" = "Custom";
+"paper.kind" = "Type";
+"paper.kind.roll" = "Continuous roll";
+"paper.kind.dieCut" = "Labels";
+"paper.roll.title" = "%g mm roll";
+"paper.dieCut.title" = "%g × %g mm labels";
+"paper.width" = "Width %g mm";
+"paper.length" = "Length %g mm";
+"paper.gap" = "Gap between labels %g mm";
+"paper.margin" = "Margins %g mm";
+"paper.label" = "Label / tape";
+"paper.sheet" = "Sheet";
+"paper.fixed" = "Size is fixed by the model.";
+
+/* Cutting (step 3) */
+"cut.step3" = "3. Cutting and copies";
+"cut.auto" = "Auto cut";
+"cut.every" = "Cut every %d labels";
+"cut.atEnd" = "Cut at end of job";
+"print.copies" = "Copies: %d";
+"cut.footer.optional" = "The TD cutter is an accessory (e.g. PA-CU). Without a cutter installed these options cut nothing. Auto cut: after each label (or every N). Cut at end: a single cut after the last one.";
+"cut.footer.builtIn" = "Built-in cutter. Auto cut: after each label (or every N). Cut at end: a single cut after the last one.";
+"cut.footer.modelDependent" = "Some P-touch models only have a manual cutter: the option then has no effect.";
+"cut.footer.none" = "This series has no cutter the SDK can drive.";
+
+/* Brother connection */
+"brother.connection.title" = "Brother connection";
+"brother.connection" = "Interface";
+"brother.ip" = "IP address";
+"brother.ip.use" = "Use";
+"brother.found.none" = "No printer. Tap Search.";
+"brother.target" = "Selected printer";
+"brother.target.forget" = "Forget this printer";
+"brother.status.check" = "Test connection and read status";
+"brother.model.useDetected" = "Use the detected model";
+"brother.log" = "Brother log";
+"brother.sdk.missing" = "Brother Print SDK missing: add BRLMPrinterKit.xcframework to the project (see swift/BROTHER_FR.md).";
+"brother.status.ready" = "Ready. Search for your printer.";
+"brother.search.running" = "Searching %@ for %d s...";
+"brother.search.found" = "Found: %@ (%@)";
+"brother.search.done" = "%d printer(s) found. Tap the one to use.";
+"brother.search.none" = "No printer found. Check it is on, its Bluetooth or Wi-Fi is enabled and it is not connected to another device.";
+"brother.search.busy" = "A search is already running.";
+"brother.search.unsupported" = "Search is not supported on this device.";
+"brother.search.communication" = "Communication error while searching. Is Bluetooth on and allowed?";
+"brother.search.failed" = "Search failed.";
+"brother.target.selected" = "Selected printer: %@";
+"brother.target.none" = "Select a printer first.";
+"brother.connecting" = "Connecting to %@...";
+"brother.printing" = "Printing on %@...";
+"brother.print.done" = "Print job sent.";
+"brother.model.mismatch" = "The printer reports %@ but the selected model is %@.";
+"brother.open.timeout" = "Timed out opening the connection. Is the printer on and in range?";
+"brother.open.failed" = "Could not open a connection to the printer.";
+"brother.status.ok" = "Printer ready";
+"brother.status.unreadable" = "Could not read the printer status.";
+"brother.status.battery" = "Battery %d/%d";
+"brother.status.media" = "Paper %d mm";
+"brother.error.noPaper" = "Out of paper.";
+"brother.error.coverOpen" = "Cover open.";
+"brother.error.busy" = "Printer busy.";
+"brother.error.paperJam" = "Paper jam or paper not fed.";
+"brother.error.battery" = "Battery low or faulty.";
+"brother.error.turnedOff" = "Printer turned off.";
+"brother.error.overheat" = "Print head overheated.";
+"brother.error.communication" = "Communication error with the printer.";
+"brother.error.optionalEquipment" = "Optional equipment incompatible or missing (cutter?). Turn cutting off if no cutter is installed.";
+"brother.error.paper" = "The printer rejected the paper size.";
+"brother.error.settings" = "Print settings rejected for this model.";
+"brother.error.model" = "The selected model does not match the printer.";
+"brother.error.canceled" = "Printing cancelled.";
+"brother.error.printer" = "Printer error.";
+"brother.error.unsupportedChannel" = "Interface not supported by this app.";

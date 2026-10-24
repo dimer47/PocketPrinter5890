@@ -4,6 +4,8 @@ import SwiftUI
 
 struct ReceiptView: View {
     @ObservedObject var transport: PocketPrinter5890BLE
+    @ObservedObject var setup: PrinterSetup
+    @ObservedObject var brother: BrotherPrinterService
     @Binding var options: PrintOptions
     @State private var receipt = Receipt.sample
     @State private var mode: ReceiptPrintMode = .rasterImage
@@ -60,44 +62,31 @@ struct ReceiptView: View {
             Section("preview.section") {
                 switch mode {
                 case .rasterImage:
-                    ReceiptPreview(receipt: receipt, width: options.width.pixels)
+                    ReceiptPreview(receipt: receipt, width: dispatcher.layoutWidth)
                         .frame(maxWidth: .infinity)
                 case .nativeText:
                     // L'apercu partage la mise en page de l'impression: ce qui
                     // s'affiche est ce qui sort du papier.
-                    Text(ReceiptDocument.preview(receipt, columns: options.textColumns))
+                    Text(ReceiptDocument.preview(receipt, columns: previewColumns))
                         .font(.footnote.monospaced())
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
             Section {
-                Button("print.receipt") { printReceipt() }
-                    .disabled(!transport.isConnected)
+                Button("print.receipt") { dispatcher.print(receipt, mode: mode) }
+                    .disabled(!dispatcher.isReady)
             }
         }
         .navigationTitle("tab.receipt")
     }
 
-    private func printReceipt() {
-        if mode == .nativeText {
-            let document = ReceiptDocument.build(receipt, columns: options.textColumns)
-            transport.send(PrintJobBuilder.segments(document: document, options: options))
-            return
-        }
-        do {
-            let renderer = ReceiptRenderer(
-                width: options.width.pixels,
-                ditherMode: .floydSteinberg
-            )
-            let bitmap = try renderer.render(receipt)
-            transport.send(PrintJobBuilder.segments(bitmap: bitmap, options: options))
-        } catch {
-            transport.recordLocalError(
-                String(format: NSLocalizedString("error.render", comment: ""),
-                       error.localizedDescription)
-            )
-        }
+    private var dispatcher: PrintDispatcher {
+        PrintDispatcher(setup: setup, transport: transport, brother: brother, options: options)
+    }
+
+    private var previewColumns: Int {
+        dispatcher.isBrother ? DocumentRasterizer().columns : options.textColumns
     }
 }
 

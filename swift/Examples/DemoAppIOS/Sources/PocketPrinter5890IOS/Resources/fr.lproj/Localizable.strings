@@ -99,3 +99,93 @@
 "settings.transport" = "Transport BLE";
 "settings.device" = "Reglages imprimante";
 "settings.alignment" = "Alignement";
+
+/* Choix de l'imprimante (etape 1) */
+"printer.step1" = "1. Imprimante";
+"printer.brand" = "Type d'imprimante";
+"printer.brand.pocket" = "Pocket 5890";
+"printer.brand.brother" = "Brother";
+"printer.pocket.detail" = "Imprimante de poche SilverCrest / Tronic / Parkside (Lidl), BLE, papier ticket 58 mm.";
+"printer.brother.detail" = "Imprimantes Brother pilotées par le Brother Print SDK (TD, RJ, QL, PT, PJ, MW).";
+"printer.model" = "Modèle";
+"printer.onlyBLE" = "Seulement les modèles Bluetooth LE";
+"printer.connections.none" = "Aucune interface iOS documentée";
+"printer.noBLE" = "Pas de Bluetooth LE sur ce modèle selon le SDK: connexion en Wi-Fi.";
+"printer.noIOSConnection" = "Le SDK ne documente aucune interface iOS gérée par l'application pour ce modèle (USB, Android ou Bluetooth Classic MFi uniquement).";
+
+/* Papier (etape 2) */
+"paper.step2" = "2. Papier";
+"paper.preset" = "Format";
+"paper.custom" = "Personnalisé";
+"paper.kind" = "Type";
+"paper.kind.roll" = "Rouleau continu";
+"paper.kind.dieCut" = "Étiquettes";
+"paper.roll.title" = "Rouleau %g mm";
+"paper.dieCut.title" = "Étiquettes %g × %g mm";
+"paper.width" = "Largeur %g mm";
+"paper.length" = "Longueur %g mm";
+"paper.gap" = "Espace entre étiquettes %g mm";
+"paper.margin" = "Marges %g mm";
+"paper.label" = "Étiquette / ruban";
+"paper.sheet" = "Feuille";
+"paper.fixed" = "Format imposé par le modèle.";
+
+/* Coupe (etape 3) */
+"cut.step3" = "3. Coupe et copies";
+"cut.auto" = "Coupe automatique";
+"cut.every" = "Couper toutes les %d étiquettes";
+"cut.atEnd" = "Couper en fin d'impression";
+"print.copies" = "Copies: %d";
+"cut.footer.optional" = "Le massicot des TD est un accessoire (ex. PA-CU). Sans massicot installé, ces options ne coupent rien. Coupe automatique: après chaque étiquette (ou toutes les N). Coupe en fin d'impression: une seule coupe après la dernière.";
+"cut.footer.builtIn" = "Massicot intégré. Coupe automatique: après chaque étiquette (ou toutes les N). Coupe en fin d'impression: une seule coupe après la dernière.";
+"cut.footer.modelDependent" = "Certaines P-touch n'ont qu'une coupe manuelle: l'option n'a alors aucun effet.";
+"cut.footer.none" = "Cette série n'a pas de coupe pilotable par le SDK.";
+
+/* Connexion Brother */
+"brother.connection.title" = "Connexion Brother";
+"brother.connection" = "Interface";
+"brother.ip" = "Adresse IP";
+"brother.ip.use" = "Utiliser";
+"brother.found.none" = "Aucune imprimante. Touchez Rechercher.";
+"brother.target" = "Imprimante retenue";
+"brother.target.forget" = "Oublier cette imprimante";
+"brother.status.check" = "Tester la connexion et lire l'état";
+"brother.model.useDetected" = "Utiliser le modèle détecté";
+"brother.log" = "Journal Brother";
+"brother.sdk.missing" = "Brother Print SDK absent: ajoutez BRLMPrinterKit.xcframework au projet (voir swift/BROTHER_FR.md).";
+"brother.status.ready" = "Prêt. Recherchez votre imprimante.";
+"brother.search.running" = "Recherche %@ pendant %d s...";
+"brother.search.found" = "Trouvée: %@ (%@)";
+"brother.search.done" = "%d imprimante(s) trouvée(s). Touchez celle à utiliser.";
+"brother.search.none" = "Aucune imprimante trouvée. Vérifiez qu'elle est allumée, que son Bluetooth ou son Wi-Fi est actif et qu'elle n'est pas connectée à un autre appareil.";
+"brother.search.busy" = "Une recherche est déjà en cours.";
+"brother.search.unsupported" = "Recherche non prise en charge sur cet appareil.";
+"brother.search.communication" = "Erreur de communication pendant la recherche. Bluetooth activé et autorisé ?";
+"brother.search.failed" = "La recherche a échoué.";
+"brother.target.selected" = "Imprimante retenue: %@";
+"brother.target.none" = "Choisissez d'abord une imprimante.";
+"brother.connecting" = "Connexion à %@...";
+"brother.printing" = "Impression sur %@...";
+"brother.print.done" = "Impression envoyée.";
+"brother.model.mismatch" = "L'imprimante annonce %@ mais le modèle choisi est %@.";
+"brother.open.timeout" = "Délai dépassé à l'ouverture de la connexion. Imprimante allumée et à portée ?";
+"brother.open.failed" = "Impossible d'ouvrir la connexion avec l'imprimante.";
+"brother.status.ok" = "Imprimante prête";
+"brother.status.unreadable" = "État de l'imprimante illisible.";
+"brother.status.battery" = "Batterie %d/%d";
+"brother.status.media" = "Papier %d mm";
+"brother.error.noPaper" = "Plus de papier.";
+"brother.error.coverOpen" = "Capot ouvert.";
+"brother.error.busy" = "Imprimante occupée.";
+"brother.error.paperJam" = "Bourrage ou papier non entraîné.";
+"brother.error.battery" = "Batterie faible ou défaillante.";
+"brother.error.turnedOff" = "Imprimante éteinte.";
+"brother.error.overheat" = "Surchauffe de la tête.";
+"brother.error.communication" = "Erreur de communication avec l'imprimante.";
+"brother.error.optionalEquipment" = "Équipement optionnel incompatible ou absent (massicot ?). Désactivez la coupe si aucun massicot n'est installé.";
+"brother.error.paper" = "Format de papier refusé par l'imprimante.";
+"brother.error.settings" = "Réglages d'impression refusés pour ce modèle.";
+"brother.error.model" = "Le modèle choisi ne correspond pas à l'imprimante.";
+"brother.error.canceled" = "Impression annulée.";
+"brother.error.printer" = "Erreur de l'imprimante.";
+"brother.error.unsupportedChannel" = "Interface non gérée par l'application.";

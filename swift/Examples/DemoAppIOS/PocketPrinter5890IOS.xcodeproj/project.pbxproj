@@ -17,6 +17,10 @@
 		A1000000000000000003011 /* Sources/PocketPrinter5890IOS/PrintToolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000003010 /* Sources/PocketPrinter5890IOS/PrintToolsView.swift */; };
 		A1000000000000000003021 /* Sources/PocketPrinter5890IOS/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000003020 /* Sources/PocketPrinter5890IOS/SettingsView.swift */; };
 		A1000000000000000003031 /* Sources/PocketPrinter5890IOS/ConsoleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000003030 /* Sources/PocketPrinter5890IOS/ConsoleView.swift */; };
+		A1000000000000000004001 /* Sources/PocketPrinter5890IOS/PrinterSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000004000 /* Sources/PocketPrinter5890IOS/PrinterSetup.swift */; };
+		A1000000000000000004011 /* Sources/PocketPrinter5890IOS/BrotherPrinterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000004010 /* Sources/PocketPrinter5890IOS/BrotherPrinterService.swift */; };
+		A1000000000000000004021 /* Sources/PocketPrinter5890IOS/PrintDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000004020 /* Sources/PocketPrinter5890IOS/PrintDispatcher.swift */; };
+		A1000000000000000004031 /* Sources/PocketPrinter5890IOS/PrinterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000004030 /* Sources/PocketPrinter5890IOS/PrinterSelectionView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +36,10 @@
 		A1000000000000000003010 /* Sources/PocketPrinter5890IOS/PrintToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/PrintToolsView.swift; sourceTree = "<group>"; };
 		A1000000000000000003020 /* Sources/PocketPrinter5890IOS/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/SettingsView.swift; sourceTree = "<group>"; };
 		A1000000000000000003030 /* Sources/PocketPrinter5890IOS/ConsoleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/ConsoleView.swift; sourceTree = "<group>"; };
+		A1000000000000000004000 /* Sources/PocketPrinter5890IOS/PrinterSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/PrinterSetup.swift; sourceTree = "<group>"; };
+		A1000000000000000004010 /* Sources/PocketPrinter5890IOS/BrotherPrinterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/BrotherPrinterService.swift; sourceTree = "<group>"; };
+		A1000000000000000004020 /* Sources/PocketPrinter5890IOS/PrintDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/PrintDispatcher.swift; sourceTree = "<group>"; };
+		A1000000000000000004030 /* Sources/PocketPrinter5890IOS/PrinterSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/PocketPrinter5890IOS/PrinterSelectionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +74,10 @@
 				A1000000000000000003020 /* Sources/PocketPrinter5890IOS/SettingsView.swift */,
 				A1000000000000000003030 /* Sources/PocketPrinter5890IOS/ConsoleView.swift */,
 				A10000000000000000000210 /* Sources/PocketPrinter5890IOS/ConnectionView.swift */,
+				A1000000000000000004000 /* Sources/PocketPrinter5890IOS/PrinterSetup.swift */,
+				A1000000000000000004010 /* Sources/PocketPrinter5890IOS/BrotherPrinterService.swift */,
+				A1000000000000000004020 /* Sources/PocketPrinter5890IOS/PrintDispatcher.swift */,
+				A1000000000000000004030 /* Sources/PocketPrinter5890IOS/PrinterSelectionView.swift */,
 				A10000000000000000000013 /* AppInfo.plist */,
 				A10000000000000000000014 /* PocketPrinter5890IOS.entitlements */,
 			);
@@ -171,6 +183,10 @@
 				A1000000000000000003021 /* Sources/PocketPrinter5890IOS/SettingsView.swift in Sources */,
 				A1000000000000000003031 /* Sources/PocketPrinter5890IOS/ConsoleView.swift in Sources */,
 				A10000000000000000000211 /* Sources/PocketPrinter5890IOS/ConnectionView.swift in Sources */,
+				A1000000000000000004001 /* Sources/PocketPrinter5890IOS/PrinterSetup.swift in Sources */,
+				A1000000000000000004011 /* Sources/PocketPrinter5890IOS/BrotherPrinterService.swift in Sources */,
+				A1000000000000000004021 /* Sources/PocketPrinter5890IOS/PrintDispatcher.swift in Sources */,
+				A1000000000000000004031 /* Sources/PocketPrinter5890IOS/PrinterSelectionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

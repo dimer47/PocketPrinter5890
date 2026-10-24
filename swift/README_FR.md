@@ -243,6 +243,11 @@ sans toucher aux reglages du systeme.
 onglets — connexion, ticket, impression, reglages, console — avec les memes
 fonctions adaptees au tactile.
 
+L'application iOS pilote aussi les imprimantes **Brother** (TD-4550DNWB en
+Bluetooth LE notamment) via le Brother Print SDK: on choisit d'abord
+l'imprimante, puis le papier qu'elle accepte, puis la coupe. Le SDK n'est
+pas fourni; voir [`BROTHER_FR.md`](BROTHER_FR.md) pour l'ajouter.
+
 > Verifiee sur iPhone physique: decouverte, connexion et impression
 > fonctionnent. Le simulateur n'ayant pas de Bluetooth, seul un appareil reel
 > peut dialoguer avec l'imprimante. L'execution sur materiel demande de

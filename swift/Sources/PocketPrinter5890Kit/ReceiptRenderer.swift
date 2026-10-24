@@ -86,6 +86,26 @@ public struct ReceiptRenderer {
         }
     }
 
+    /// Image du ticket agrandie de `scale`, mise en page inchangee.
+    ///
+    /// Sert aux imprimantes qui recoivent une image et la mettent a
+    /// l'echelle du papier (Brother): un rendu a 384 points etire sur une
+    /// tete 300 dpi de 4 pouces donnerait un texte en escalier. On dessine
+    /// donc directement a la resolution de l'imprimante.
+    public func image(_ receipt: Receipt, scale: CGFloat) throws -> CGImage {
+        let height = contentHeight(for: receipt)
+        return try RasterCanvas.image(width: width, height: height, scale: scale) { context in
+            drawReceipt(receipt, in: context, size: CGSize(width: width, height: height))
+        }
+    }
+
+    /// Mire agrandie de `scale`, pour les imprimantes qui recoivent une image.
+    public func testPatternImage(height: Int = 240, scale: CGFloat) throws -> CGImage {
+        try RasterCanvas.image(width: width, height: height, scale: scale) { context in
+            drawTestPattern(in: context, height: height)
+        }
+    }
+
     private func contentHeight(for receipt: Receipt) -> Int {
         90 + receipt.items.count * 22 + 80
     }

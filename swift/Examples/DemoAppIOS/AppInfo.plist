@@ -19,9 +19,17 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Bluetooth is used to talk to the thermal pocket printer.</string>
+	<string>Bluetooth is used to talk to the thermal pocket printer and to Brother printers.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>Bluetooth is used to talk to the thermal pocket printer.</string>
+	<string>Bluetooth is used to talk to the thermal pocket printer and to Brother printers.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>The local network is used to find and print to Brother printers over Wi-Fi.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_pdl-datastream._tcp</string>
+		<string>_printer._tcp</string>
+		<string>_ipp._tcp</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>

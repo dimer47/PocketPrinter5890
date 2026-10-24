@@ -4,75 +4,93 @@ import SwiftUI
 
 struct ConnectionView: View {
     @ObservedObject var transport: PocketPrinter5890BLE
+    @ObservedObject var setup: PrinterSetup
+    @ObservedObject var brother: BrotherPrinterService
+    @Binding var options: PrintOptions
 
     var body: some View {
         List {
-            Section {
-                if transport.isConnected {
-                    DeviceStatusRow(
-                        battery: transport.batteryPercent,
-                        model: transport.deviceModel,
-                        firmware: transport.deviceFirmware
-                    )
+            // L'imprimante se choisit avant le papier: les formats proposes
+            // en dependent.
+            PrinterChoiceSection(setup: setup)
+            PaperChoiceSection(setup: setup, brother: brother, options: $options)
+
+            if setup.brand == .brother {
+                BrotherCutSection(setup: setup)
+                BrotherConnectionSections(setup: setup, brother: brother)
+            } else {
+                pocketSections
+            }
+        }
+        .navigationTitle("app.title")
+    }
+
+    @ViewBuilder
+    private var pocketSections: some View {
+        Section {
+            if transport.isConnected {
+                DeviceStatusRow(
+                    battery: transport.batteryPercent,
+                    model: transport.deviceModel,
+                    firmware: transport.deviceFirmware
+                )
+            }
+            Text(transport.stateText)
+                .font(.callout)
+                .foregroundColor(.secondary)
+        }
+
+        Section {
+            Button(transport.isScanning ? "scan.stop" : "scan.start") {
+                transport.isScanning ? transport.stopScan() : transport.startScan()
+            }
+            if transport.isConnected {
+                Button("device.disconnect", role: .destructive) {
+                    transport.disconnect()
                 }
-                Text(transport.stateText)
-                    .font(.callout)
+            }
+            Toggle("device.filter", isOn: $transport.showOnlyLikelyPrinters)
+        }
+
+        Section("devices.found") {
+            if transport.devices.isEmpty {
+                Text("devices.none")
                     .foregroundColor(.secondary)
             }
-
-            Section {
-                Button(transport.isScanning ? "scan.stop" : "scan.start") {
-                    transport.isScanning ? transport.stopScan() : transport.startScan()
-                }
-                if transport.isConnected {
-                    Button("device.disconnect", role: .destructive) {
-                        transport.disconnect()
-                    }
-                }
-                Toggle("device.filter", isOn: $transport.showOnlyLikelyPrinters)
-            }
-
-            Section("devices.found") {
-                if transport.devices.isEmpty {
-                    Text("devices.none")
-                        .foregroundColor(.secondary)
-                }
-                ForEach(transport.devices) { device in
-                    Button {
-                        transport.connect(to: device)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(device.name)
-                                .font(.body.weight(.medium))
-                            if device.isLikelyL13 {
-                                Text("device.candidate")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                            }
-                            Text("\(device.id.uuidString)  \(device.rssi) dBm")
-                                .font(.caption2.monospaced())
-                                .foregroundColor(.secondary)
+            ForEach(transport.devices) { device in
+                Button {
+                    transport.connect(to: device)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(device.name)
+                            .font(.body.weight(.medium))
+                        if device.isLikelyL13 {
+                            Text("device.candidate")
+                                .font(.caption)
+                                .foregroundColor(.green)
                         }
-                    }
-                }
-            }
-
-            if transport.isConnected {
-                Section("gatt.title") {
-                    LabeledRow("Service", transport.selectedService)
-                    LabeledRow("RX", transport.selectedRX)
-                    LabeledRow("TX", transport.selectedTX)
-                    LabeledRow("Notify", transport.selectedNotify)
-                }
-
-                Section {
-                    Button("info.read") {
-                        transport.readDeviceInformation()
+                        Text("\(device.id.uuidString)  \(device.rssi) dBm")
+                            .font(.caption2.monospaced())
+                            .foregroundColor(.secondary)
                     }
                 }
             }
         }
-        .navigationTitle("app.title")
+
+        if transport.isConnected {
+            Section("gatt.title") {
+                LabeledRow("Service", transport.selectedService)
+                LabeledRow("RX", transport.selectedRX)
+                LabeledRow("TX", transport.selectedTX)
+                LabeledRow("Notify", transport.selectedNotify)
+            }
+
+            Section {
+                Button("info.read") {
+                    transport.readDeviceInformation()
+                }
+            }
+        }
     }
 }
 

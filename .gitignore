@@ -30,3 +30,8 @@ android/local.properties
 
 # SwiftPM a la racine
 /.build/
+
+# Brother Print SDK (binaire proprietaire): a deposer localement, jamais commite.
+# Voir swift/BROTHER_FR.md.
+swift/Examples/DemoAppIOS/Vendor/
+BRLMPrinterKit.xcframework/
