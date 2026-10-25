@@ -1,6 +1,7 @@
 import PocketPrinter5890BLE
 import PocketPrinter5890Kit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct PrintToolsView: View {
     @ObservedObject var transport: PocketPrinter5890BLE
@@ -12,9 +13,17 @@ struct PrintToolsView: View {
     @State private var textSize = 1
     @State private var textAlignment: ESCPOS.Alignment = .left
     @State private var codeContent = "https://exemple.fr"
+    @State private var pickingPDF = false
 
     var body: some View {
         List {
+            if dispatcher.isBrother && brother.activity == .printing {
+                Section {
+                    Text(brother.status).font(.callout).foregroundColor(.secondary)
+                    Button("brother.cancel", role: .destructive) { brother.cancelPrint() }
+                }
+            }
+
             Section("text.native") {
                 TextEditor(text: $freeText)
                     .frame(height: 90)
@@ -50,6 +59,17 @@ struct PrintToolsView: View {
                     .disabled(!dispatcher.isReady || codeContent.isEmpty)
             }
 
+            if dispatcher.isBrother {
+                Section {
+                    Button("pdf.print") { pickingPDF = true }
+                        .disabled(!dispatcher.isReady)
+                } header: {
+                    Text("pdf.section")
+                } footer: {
+                    Text("pdf.footer")
+                }
+            }
+
             Section("demos.section") {
                 Button("demo.weather") {
                     dispatcher.print(DemoDocuments.weatherAndHoroscope())
@@ -80,6 +100,9 @@ struct PrintToolsView: View {
             }
         }
         .navigationTitle("tab.tools")
+        .fileImporter(isPresented: $pickingPDF, allowedContentTypes: [.pdf]) { result in
+            printPDF(result)
+        }
     }
 
     private var dispatcher: PrintDispatcher {
@@ -103,5 +126,26 @@ struct PrintToolsView: View {
             return
         }
         dispatcher.print(PrintDocument(elements: [element]))
+    }
+
+    /// Le fichier choisi n'est lisible que le temps de l'acces securise:
+    /// on le copie avant de le confier a la file du SDK.
+    private func printPDF(_ result: Result<URL, Error>) {
+        switch result {
+        case let .success(url):
+            let granted = url.startAccessingSecurityScopedResource()
+            defer { if granted { url.stopAccessingSecurityScopedResource() } }
+            let copy = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension("pdf")
+            do {
+                try FileManager.default.copyItem(at: url, to: copy)
+                brother.printPDF(at: copy, job: setup.brotherJob)
+            } catch {
+                brother.reportError(error.localizedDescription)
+            }
+        case let .failure(error):
+            brother.reportError(error.localizedDescription)
+        }
     }
 }

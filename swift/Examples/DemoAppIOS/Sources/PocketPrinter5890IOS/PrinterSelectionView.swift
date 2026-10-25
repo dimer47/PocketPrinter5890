@@ -319,6 +319,13 @@ struct BrotherCutSection: View {
                     Toggle("cut.atEnd", isOn: $setup.cut.cutAtEnd)
                 }
             }
+            if setup.brotherModel.series == .td {
+                Toggle("finish.peel", isOn: $setup.quality.peelLabel)
+                Stepper(value: $setup.quality.feedMarginMM, in: 0...20, step: 0.5) {
+                    Text(String(format: NSLocalizedString("finish.feedMargin", comment: ""),
+                                setup.quality.feedMarginMM))
+                }
+            }
             Stepper(value: $setup.copies, in: 1...99) {
                 Text(String(format: NSLocalizedString("print.copies", comment: ""), setup.copies))
             }
@@ -439,6 +446,9 @@ struct BrotherConnectionSections: View {
             Text(brother.status)
                 .font(.callout)
                 .foregroundColor(brother.statusIsError ? .red : .secondary)
+            if brother.activity == .printing {
+                Button("brother.cancel", role: .destructive) { brother.cancelPrint() }
+            }
         } header: {
             Text("brother.connection.title")
         }
@@ -471,7 +481,15 @@ struct BrotherConnectionSections: View {
                 }
                 Button("brother.status.check") { brother.checkStatus(model: model) }
                     .disabled(brother.activity != .idle)
+                Button("brother.info.read") { brother.readInfo() }
+                    .disabled(brother.activity != .idle)
+                Button("brother.report.read") { brother.readSystemReport() }
+                    .disabled(brother.activity != .idle)
                 Button("brother.target.forget", role: .destructive) { brother.target = nil }
+            }
+            .sheet(isPresented: Binding(get: { brother.systemReport != nil },
+                                        set: { if !$0 { brother.systemReport = nil } })) {
+                SystemReportSheet(text: brother.systemReport ?? "")
             }
         }
     }
@@ -480,6 +498,34 @@ struct BrotherConnectionSections: View {
     /// interface reellement disponible sur le modele.
     private func effectiveConnection(for model: BrotherModel) -> BrotherConnection {
         model.appConnections.contains(connection) ? connection : (model.appConnections.first ?? .ble)
+    }
+}
+
+/// Rapport systeme en entier, selectionnable et partageable.
+private struct SystemReportSheet: View {
+    let text: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                Text(text)
+                    .font(.caption.monospaced())
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+            .navigationTitle("brother.report.title")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.close") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("common.copy") { UIPasteboard.general.string = text }
+                }
+            }
+        }
     }
 }
 

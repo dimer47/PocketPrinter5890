@@ -106,4 +106,22 @@ struct BrotherQualityOptions: Hashable, Codable {
     var halftone: Halftone = .threshold
     /// Seuil noir/blanc, utilise seulement avec le tramage `threshold`.
     var threshold = 127
+    /// Decolleur d'etiquettes (accessoire Brother). TD seulement.
+    var peelLabel = false
+    /// Marge ajoutee en haut et en bas, en mm. TD seulement.
+    var feedMarginMM = 0.0
+
+    init() {}
+
+    // Lecture tolerante: un reglage absent d'une ancienne version garde sa
+    // valeur par defaut au lieu d'effacer les autres.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        density = try c.decodeIfPresent(Int.self, forKey: .density)
+        bestQuality = try c.decodeIfPresent(Bool.self, forKey: .bestQuality) ?? false
+        halftone = try c.decodeIfPresent(Halftone.self, forKey: .halftone) ?? .threshold
+        threshold = try c.decodeIfPresent(Int.self, forKey: .threshold) ?? 127
+        peelLabel = try c.decodeIfPresent(Bool.self, forKey: .peelLabel) ?? false
+        feedMarginMM = try c.decodeIfPresent(Double.self, forKey: .feedMarginMM) ?? 0
+    }
 }

@@ -57,6 +57,8 @@ final class BrotherPrinterService: ObservableObject {
     @Published private(set) var status: String
     @Published private(set) var statusIsError = false
     @Published private(set) var events: [Event] = []
+    /// Dernier rapport systeme lu, affiche en entier dans une feuille.
+    @Published var systemReport: String? = nil
     /// Imprimante retenue. Conservee: le SDK n'a pas besoin d'une nouvelle
     /// recherche quand on connait deja son nom local ou son adresse.
     @Published var target: BrotherTarget? = nil {
@@ -229,6 +231,98 @@ final class BrotherPrinterService: ObservableObject {
         #endif
     }
 
+    /// Demande l'arret de l'impression en cours.
+    ///
+    /// Le SDK ne fait que lever un drapeau: il le lit entre deux pages, donc
+    /// une page deja partie sort quand meme.
+    func cancelPrint() {
+        guard activity == .printing else { return }
+        log(NSLocalizedString("brother.cancel.requested", comment: ""))
+        #if canImport(BRLMPrinterKit)
+        BrotherSDKBridge.cancelActivePrint()
+        #endif
+    }
+
+    // MARK: - Informations
+
+    /// Numero de serie, firmwares, version du media, batterie.
+    func readInfo() {
+        runOnPrinter(starting: "brother.info.reading") { target in
+            #if canImport(BRLMPrinterKit)
+            return BrotherSDKBridge.readInfo(target: target)
+            #else
+            return .init(message: "", isError: true)
+            #endif
+        }
+    }
+
+    /// Rapport systeme complet de l'imprimante.
+    func readSystemReport() {
+        runOnPrinter(starting: "brother.report.reading") { target in
+            #if canImport(BRLMPrinterKit)
+            return BrotherSDKBridge.readSystemReport(target: target)
+            #else
+            return .init(message: "", isError: true)
+            #endif
+        }
+    }
+
+    /// Ouvre le canal sur la file du SDK, execute `work`, journalise le resultat.
+    private func runOnPrinter(
+        starting key: String,
+        _ work: @escaping @Sendable (BrotherTarget) -> BrotherOutcome
+    ) {
+        guard activity == .idle else { return }
+        guard Self.isSDKAvailable else {
+            report(NSLocalizedString("brother.sdk.missing", comment: ""), isError: true)
+            return
+        }
+        guard let target else {
+            report(NSLocalizedString("brother.target.none", comment: ""), isError: true)
+            return
+        }
+        activity = .connecting
+        report(NSLocalizedString(key, comment: ""))
+        queue.async { [weak self] in
+            let outcome = work(target)
+            Task { @MainActor in
+                guard let self else { return }
+                self.activity = .idle
+                for line in outcome.warnings { self.log(line) }
+                if let text = outcome.report { self.systemReport = text }
+                self.report(outcome.message, isError: outcome.isError)
+            }
+        }
+    }
+
+    // MARK: - PDF
+
+    /// Imprime un PDF tel quel: le SDK le met lui-meme a l'echelle du papier.
+    func printPDF(at url: URL, job: BrotherJob) {
+        guard activity == .idle else { return }
+        guard Self.isSDKAvailable else {
+            report(NSLocalizedString("brother.sdk.missing", comment: ""), isError: true)
+            return
+        }
+        guard let target else {
+            report(NSLocalizedString("brother.target.none", comment: ""), isError: true)
+            return
+        }
+        activity = .printing
+        report(String(format: NSLocalizedString("brother.pdf.printing", comment: ""), url.lastPathComponent))
+        #if canImport(BRLMPrinterKit)
+        queue.async { [weak self] in
+            let outcome = BrotherSDKBridge.printPDF(url: url, job: job, target: target)
+            try? FileManager.default.removeItem(at: url)
+            Task { @MainActor in
+                self?.activity = .idle
+                for warning in outcome.warnings { self?.log(warning) }
+                self?.report(outcome.message, isError: outcome.isError)
+            }
+        }
+        #endif
+    }
+
     /// Liste des etiquettes QL ou rubans PT acceptes par le modele, selon le
     /// SDK. Sans SDK, toute la liste est proposee.
     func supportedLabels(for model: BrotherModel) -> [BrotherLabelSize] {
@@ -275,16 +369,43 @@ final class BrotherPrinterService: ObservableObject {
     }
 }
 
+/// Resultat d'une operation sur l'imprimante.
+struct BrotherOutcome: Sendable {
+    var message: String
+    var isError: Bool
+    /// Lignes ajoutees au journal avant le message.
+    var warnings: [String] = []
+    /// Texte long a montrer a part (rapport systeme).
+    var report: String? = nil
+}
+
 #if canImport(BRLMPrinterKit)
 /// Traduction entre le modele de l'application et le Brother Print SDK.
 ///
 /// Les noms d'API, de cas et de proprietes suivent les en-tetes du SDK 4.13
 /// et l'application d'exemple Swift fournie par Brother.
 enum BrotherSDKBridge {
-    struct Outcome {
-        var message: String
-        var isError: Bool
-        var warnings: [String] = []
+    typealias Outcome = BrotherOutcome
+
+    // MARK: Annulation
+
+    /// Pilote de l'impression en cours, pour `cancelPrinting` depuis un
+    /// autre fil. Protege par un verrou: ecrit sur la file du SDK, lu
+    /// depuis le fil principal.
+    private static let activeLock = NSLock()
+    nonisolated(unsafe) private static var activeDriver: BRLMPrinterDriver?
+
+    static func cancelActivePrint() {
+        activeLock.lock()
+        let driver = activeDriver
+        activeLock.unlock()
+        driver?.cancelPrinting()
+    }
+
+    private static func printing(with driver: BRLMPrinterDriver, _ body: () -> BRLMPrintError) -> BRLMPrintError {
+        activeLock.lock(); activeDriver = driver; activeLock.unlock()
+        defer { activeLock.lock(); activeDriver = nil; activeLock.unlock() }
+        return body()
     }
 
     // MARK: Canal
@@ -354,7 +475,7 @@ enum BrotherSDKBridge {
         }
 
         var outcome = withDriver(target: target) { driver in
-            let error = driver.printImage(with: image, settings: settings)
+            let error = printing(with: driver) { driver.printImage(with: image, settings: settings) }
             if error.code == .noError {
                 return Outcome(message: NSLocalizedString("brother.print.done", comment: ""), isError: false)
             }
@@ -362,6 +483,68 @@ enum BrotherSDKBridge {
         }
         outcome.warnings = warnings
         return outcome
+    }
+
+    // MARK: PDF
+
+    static func printPDF(url: URL, job: BrotherJob, target: BrotherTarget) -> Outcome {
+        guard let settings = settings(for: job) else {
+            return Outcome(message: NSLocalizedString("brother.error.settings", comment: ""), isError: true)
+        }
+        let report = BRLMValidatePrintSettings.validate(settings)
+        let errors = report.issues.filter { $0.rank == .error }.map(\.message)
+        let warnings = report.issues.filter { $0.rank != .error }.map(\.message)
+        if !errors.isEmpty {
+            return Outcome(message: errors.joined(separator: "\n"), isError: true, warnings: warnings)
+        }
+        var outcome = withDriver(target: target) { driver in
+            let error = printing(with: driver) { driver.printPDF(with: url, settings: settings) }
+            if error.code == .noError {
+                return Outcome(message: NSLocalizedString("brother.print.done", comment: ""), isError: false)
+            }
+            return Outcome(message: printMessage(error.code), isError: true)
+        }
+        outcome.warnings = warnings
+        return outcome
+    }
+
+    // MARK: Informations
+
+    static func readInfo(target: BrotherTarget) -> Outcome {
+        withDriver(target: target) { driver in
+            var lines: [String] = []
+            func add(_ key: String, _ result: BRLMRequestPrinterInfoResult<NSString>) {
+                guard result.error.code == .noError, let value = result.printerInfo as String?,
+                      !value.isEmpty else { return }
+                lines.append(NSLocalizedString(key, comment: "") + " : " + value)
+            }
+            add("brother.info.serial", driver.requestSerialNumber())
+            add("brother.info.firmware", driver.requestMainFirmVersion())
+            add("brother.info.media", driver.requestMediaVersion())
+            add("brother.info.bluetoothFirmware", driver.requestBluetoothFirmVersion())
+            add("brother.info.bluetoothName", driver.requestBluetoothLocalName())
+            let battery = driver.requestBatteryInfo()
+            if battery.error.code == .noError, let info = battery.printerInfo {
+                lines.append(String(format: NSLocalizedString("brother.info.battery", comment: ""),
+                                    info.chargeLevel, info.healthLevel))
+            }
+            if lines.isEmpty {
+                return Outcome(message: NSLocalizedString("brother.info.none", comment: ""), isError: true)
+            }
+            return Outcome(message: NSLocalizedString("brother.info.done", comment: ""),
+                           isError: false, warnings: lines)
+        }
+    }
+
+    static func readSystemReport(target: BrotherTarget) -> Outcome {
+        withDriver(target: target) { driver in
+            let result = driver.requestSystemReport()
+            guard result.error.code == .noError, let text = result.printerInfo as String?, !text.isEmpty else {
+                return Outcome(message: NSLocalizedString("brother.report.none", comment: ""), isError: true)
+            }
+            return Outcome(message: NSLocalizedString("brother.report.done", comment: ""),
+                           isError: false, report: text)
+        }
     }
 
     /// Echelle de rendu pour que l'image arrive a la resolution de la tete.
@@ -389,6 +572,11 @@ enum BrotherSDKBridge {
             settings.autoCutForEachPageCount = job.cut.clampedCutEveryPages
             settings.cutAtEnd = job.cut.cutAtEnd
             settings.density = tdDensity(job.quality.density)
+            // Decolleur: sans effet si l'accessoire n'est pas monte.
+            settings.peelLabel = job.quality.peelLabel
+            // Marge ajoutee en haut et en bas, exprimee en points de la tete.
+            let ydpi = BRLMPrinterModelSpec(printerModel: model).ydpi
+            settings.feedDirectionMargins = UInt(max(0, (job.quality.feedMarginMM / 25.4 * (ydpi > 0 ? ydpi : 203)).rounded()))
             applyImageDefaults(settings, job: job)
             return settings
 
