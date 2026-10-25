@@ -216,7 +216,6 @@
 "brother.info.firmware" = "Firmware";
 "brother.info.media" = "Version média";
 "brother.info.bluetoothFirmware" = "Firmware Bluetooth";
-"brother.info.bluetoothName" = "Nom Bluetooth";
 "brother.info.battery" = "Batterie : charge %ld, santé %ld";
 "brother.report.read" = "Rapport système";
 "brother.report.reading" = "Lecture du rapport système…";

@@ -522,7 +522,8 @@ enum BrotherSDKBridge {
             add("brother.info.firmware", driver.requestMainFirmVersion())
             add("brother.info.media", driver.requestMediaVersion())
             add("brother.info.bluetoothFirmware", driver.requestBluetoothFirmVersion())
-            add("brother.info.bluetoothName", driver.requestBluetoothLocalName())
+            // Pas de requestBluetoothLocalName: sur une TD-4550DNWB en BLE,
+            // l'appel reste bloque plusieurs minutes sans reponse.
             let battery = driver.requestBatteryInfo()
             if battery.error.code == .noError, let info = battery.printerInfo {
                 lines.append(String(format: NSLocalizedString("brother.info.battery", comment: ""),
