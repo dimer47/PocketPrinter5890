@@ -36,11 +36,21 @@ final class BrotherPrinterService: ObservableObject {
         case printing
     }
 
+    /// Nature d'un message, pour sa couleur et son etiquette en console.
+    enum EventKind {
+        case general, search, connection, print, info
+    }
+
     struct Event: Identifiable {
         let id = UUID()
         let date = Date()
         let text: String
         let isError: Bool
+        var kind: EventKind = .general
+        /// Infos structurees (libelle, valeur), affichees en tableau.
+        var fields: [BrotherField] = []
+        /// Charge de la batterie en %, affichee en jauge.
+        var battery: Int? = nil
     }
 
     static let isSDKAvailable: Bool = {
@@ -150,17 +160,18 @@ final class BrotherPrinterService: ObservableObject {
         guard !found.contains(where: { $0.id == printer.id }) else { return }
         found.append(printer)
         log(String(format: NSLocalizedString("brother.search.found", comment: ""),
-                   printer.modelName.isEmpty ? "?" : printer.modelName, printer.address))
+                   printer.modelName.isEmpty ? "?" : printer.modelName, printer.address), kind: .search)
     }
 
     private func finishSearch(errorMessage: String?) {
         activity = .idle
         if let errorMessage {
-            report(errorMessage, isError: true)
+            report(errorMessage, isError: true, kind: .search)
         } else if found.isEmpty {
-            report(NSLocalizedString("brother.search.none", comment: ""), isError: true)
+            report(NSLocalizedString("brother.search.none", comment: ""), isError: true, kind: .search)
         } else {
-            report(String(format: NSLocalizedString("brother.search.done", comment: ""), found.count))
+            report(String(format: NSLocalizedString("brother.search.done", comment: ""), found.count),
+                   kind: .search)
         }
     }
 
@@ -181,7 +192,7 @@ final class BrotherPrinterService: ObservableObject {
             let outcome = BrotherSDKBridge.readStatus(target: target)
             Task { @MainActor in
                 self?.activity = .idle
-                self?.report(outcome.message, isError: outcome.isError)
+                self?.report(outcome.message, isError: outcome.isError, kind: .connection)
             }
         }
         #endif
@@ -224,8 +235,8 @@ final class BrotherPrinterService: ObservableObject {
             }
             Task { @MainActor in
                 self?.activity = .idle
-                for warning in outcome.warnings { self?.log(warning) }
-                self?.report(outcome.message, isError: outcome.isError)
+                for warning in outcome.warnings { self?.log(warning, kind: .print) }
+                self?.report(outcome.message, isError: outcome.isError, kind: .print)
             }
         }
         #endif
@@ -288,9 +299,13 @@ final class BrotherPrinterService: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 self.activity = .idle
-                for line in outcome.warnings { self.log(line) }
+                for line in outcome.warnings { self.log(line, kind: .info) }
                 if let text = outcome.report { self.systemReport = text }
-                self.report(outcome.message, isError: outcome.isError)
+                self.report(outcome.message, isError: outcome.isError, kind: .info)
+                if !outcome.fields.isEmpty || outcome.battery != nil {
+                    self.log(NSLocalizedString("brother.info.title", comment: ""), kind: .info,
+                             fields: outcome.fields, battery: outcome.battery)
+                }
             }
         }
     }
@@ -316,8 +331,8 @@ final class BrotherPrinterService: ObservableObject {
             try? FileManager.default.removeItem(at: url)
             Task { @MainActor in
                 self?.activity = .idle
-                for warning in outcome.warnings { self?.log(warning) }
-                self?.report(outcome.message, isError: outcome.isError)
+                for warning in outcome.warnings { self?.log(warning, kind: .print) }
+                self?.report(outcome.message, isError: outcome.isError, kind: .print)
             }
         }
         #endif
@@ -352,19 +367,30 @@ final class BrotherPrinterService: ObservableObject {
 
     // MARK: - Journal
 
+    private var currentKind: EventKind {
+        switch activity {
+        case .idle: return .general
+        case .searching: return .search
+        case .connecting: return .connection
+        case .printing: return .print
+        }
+    }
+
     /// Erreur survenue avant l'envoi (rendu, contenu invalide).
     func reportError(_ text: String) {
         report(text, isError: true)
     }
 
-    private func report(_ text: String, isError: Bool = false) {
+    private func report(_ text: String, isError: Bool = false, kind: EventKind? = nil) {
         status = text
         statusIsError = isError
-        log(text, isError: isError)
+        log(text, isError: isError, kind: kind)
     }
 
-    private func log(_ text: String, isError: Bool = false) {
-        events.append(Event(text: text, isError: isError))
+    private func log(_ text: String, isError: Bool = false, kind: EventKind? = nil,
+                     fields: [BrotherField] = [], battery: Int? = nil) {
+        events.append(Event(text: text, isError: isError, kind: kind ?? currentKind,
+                            fields: fields, battery: battery))
         if events.count > 200 { events.removeFirst(events.count - 200) }
     }
 }
@@ -377,6 +403,15 @@ struct BrotherOutcome: Sendable {
     var warnings: [String] = []
     /// Texte long a montrer a part (rapport systeme).
     var report: String? = nil
+    var fields: [BrotherField] = []
+    var battery: Int? = nil
+}
+
+/// Une information de l'imprimante: icone SF Symbols, libelle, valeur.
+struct BrotherField: Hashable, Sendable {
+    let icon: String
+    let label: String
+    let value: String
 }
 
 #if canImport(BRLMPrinterKit)
@@ -512,28 +547,33 @@ enum BrotherSDKBridge {
 
     static func readInfo(target: BrotherTarget) -> Outcome {
         withDriver(target: target) { driver in
-            var lines: [String] = []
-            func add(_ key: String, _ result: BRLMRequestPrinterInfoResult<NSString>) {
+            var fields: [BrotherField] = []
+            func add(_ icon: String, _ key: String, _ result: BRLMRequestPrinterInfoResult<NSString>) {
                 guard result.error.code == .noError, let value = result.printerInfo as String?,
                       !value.isEmpty else { return }
-                lines.append(NSLocalizedString(key, comment: "") + " : " + value)
+                fields.append(BrotherField(icon: icon, label: NSLocalizedString(key, comment: ""), value: value))
             }
-            add("brother.info.serial", driver.requestSerialNumber())
-            add("brother.info.firmware", driver.requestMainFirmVersion())
-            add("brother.info.media", driver.requestMediaVersion())
-            add("brother.info.bluetoothFirmware", driver.requestBluetoothFirmVersion())
+            add("number", "brother.info.serial", driver.requestSerialNumber())
+            add("cpu", "brother.info.firmware", driver.requestMainFirmVersion())
+            add("doc.plaintext", "brother.info.media", driver.requestMediaVersion())
+            add("dot.radiowaves.left.and.right", "brother.info.bluetoothFirmware", driver.requestBluetoothFirmVersion())
             // Pas de requestBluetoothLocalName: sur une TD-4550DNWB en BLE,
             // l'appel reste bloque plusieurs minutes sans reponse.
+            var charge: Int?
             let battery = driver.requestBatteryInfo()
             if battery.error.code == .noError, let info = battery.printerInfo {
-                lines.append(String(format: NSLocalizedString("brother.info.battery", comment: ""),
-                                    info.chargeLevel, info.healthLevel))
+                if info.chargeLevel >= 0 { charge = info.chargeLevel }
+                if info.healthLevel >= 0 {
+                    fields.append(BrotherField(icon: "heart",
+                                               label: NSLocalizedString("brother.info.batteryHealth", comment: ""),
+                                               value: "\(info.healthLevel) %"))
+                }
             }
-            if lines.isEmpty {
+            if fields.isEmpty && charge == nil {
                 return Outcome(message: NSLocalizedString("brother.info.none", comment: ""), isError: true)
             }
             return Outcome(message: NSLocalizedString("brother.info.done", comment: ""),
-                           isError: false, warnings: lines)
+                           isError: false, fields: fields, battery: charge)
         }
     }
 

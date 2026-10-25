@@ -210,13 +210,11 @@
 "brother.cancel.requested" = "Annulation demandée : la page en cours sort quand même.";
 "brother.info.read" = "Infos de l'imprimante";
 "brother.info.reading" = "Lecture des informations…";
-"brother.info.done" = "Informations lues : voir la console.";
 "brother.info.none" = "Aucune information renvoyée par l'imprimante.";
 "brother.info.serial" = "N° de série";
 "brother.info.firmware" = "Firmware";
 "brother.info.media" = "Version média";
 "brother.info.bluetoothFirmware" = "Firmware Bluetooth";
-"brother.info.battery" = "Batterie : charge %ld, santé %ld";
 "brother.report.read" = "Rapport système";
 "brother.report.reading" = "Lecture du rapport système…";
 "brother.report.done" = "Rapport système lu.";
@@ -230,3 +228,7 @@
 "pdf.footer" = "Le PDF est mis à la largeur du papier, une page par étiquette.";
 "brother.pdf.printing" = "Impression de %@…";
 "common.copy" = "Copier";
+"brother.info.title" = "Imprimante";
+"brother.info.batteryHealth" = "Santé batterie";
+"brother.info.batteryCharge" = "Batterie";
+"brother.info.done" = "Informations lues.";

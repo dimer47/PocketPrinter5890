@@ -210,13 +210,11 @@
 "brother.cancel.requested" = "Cancel requested: the current page still prints.";
 "brother.info.read" = "Printer info";
 "brother.info.reading" = "Reading printer info…";
-"brother.info.done" = "Info read: see the console.";
 "brother.info.none" = "The printer returned no information.";
 "brother.info.serial" = "Serial number";
 "brother.info.firmware" = "Firmware";
 "brother.info.media" = "Media version";
 "brother.info.bluetoothFirmware" = "Bluetooth firmware";
-"brother.info.battery" = "Battery: charge %ld, health %ld";
 "brother.report.read" = "System report";
 "brother.report.reading" = "Reading system report…";
 "brother.report.done" = "System report read.";
@@ -230,3 +228,7 @@
 "pdf.footer" = "The PDF is scaled to the paper width, one page per label.";
 "brother.pdf.printing" = "Printing %@…";
 "common.copy" = "Copy";
+"brother.info.title" = "Printer";
+"brother.info.batteryHealth" = "Battery health";
+"brother.info.batteryCharge" = "Battery";
+"brother.info.done" = "Info read.";
