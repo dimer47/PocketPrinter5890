@@ -12,35 +12,47 @@ struct ConsoleView: View {
     @ObservedObject var brother: BrotherPrinterService
 
     var body: some View {
-        Group {
+        List {
             if setup.brand == .brother {
-                brotherLog
+                brotherRows
             } else {
-                hexLog
-            }
-        }
-    }
-
-    private var brotherLog: some View {
-        List(brother.events.reversed()) { event in
-            VStack(alignment: .leading, spacing: 2) {
-                Text(event.date, style: .time)
-                    .font(.caption2.monospaced())
-                    .foregroundColor(.secondary)
-                Text(event.text)
-                    .font(.caption)
-                    .foregroundColor(event.isError ? .red : .primary)
+                hexRows
             }
         }
         .overlay {
-            if brother.events.isEmpty {
-                Text("brother.log.empty").foregroundColor(.secondary)
+            if setup.brand == .brother && brother.events.isEmpty {
+                Text("brother.log.empty")
+                    .font(.callout)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
+        }
+        .navigationTitle("tab.console")
+    }
+
+    /// Meme gabarit que les trames: etiquette coloree, titre, detail.
+    private var brotherRows: some View {
+        ForEach(brother.events.reversed()) { event in
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text(event.isError ? "ERR" : "SDK")
+                        .font(.caption2.weight(.bold))
+                        .foregroundColor(event.isError ? .red : .secondary)
+                        .frame(width: 34, alignment: .leading)
+                    Text(event.date, style: .time)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                Text(event.text)
+                    .font(.caption2)
+                    .foregroundColor(event.isError ? .red : .secondary)
             }
         }
     }
 
-    private var hexLog: some View {
-        List(transport.log.suffix(300).reversed()) { entry in
+    private var hexRows: some View {
+        ForEach(transport.log.suffix(300).reversed()) { entry in
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(entry.direction.rawValue)
@@ -61,7 +73,6 @@ struct ConsoleView: View {
                 }
             }
         }
-        .navigationTitle("tab.console")
     }
 
     private func color(for direction: HexLogEntry.Direction) -> Color {
