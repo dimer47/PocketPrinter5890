@@ -497,9 +497,9 @@ enum BrotherSDKBridge {
         case .MW_260MFi: return .mw_260MFi
         case .MW_170: return .MW_170
         case .MW_270: return .MW_270
-        case .RJ_2031: return .unknown // absent du SDK 4.13
+        case .RJ_2031: return .RJ_2031
         case .RJ_2050: return .RJ_2050
-        case .RJ_2131: return .unknown // absent du SDK 4.13
+        case .RJ_2131: return .RJ_2131
         case .RJ_2140: return .RJ_2140
         case .RJ_2150: return .RJ_2150
         case .RJ_3050: return .RJ_3050
@@ -574,7 +574,7 @@ enum BrotherSDKBridge {
         case .PT_P710BT: return .PT_P710BT
         case .PT_P715eBT: return .pt_P715eBT
         case .PT_P750W: return .PT_P750W
-        case .PT_P750Wc: return .unknown // absent du SDK 4.13
+        case .PT_P750Wc: return .pt_P750Wc
         case .PT_P900W: return .PT_P900W
         case .PT_P910BT: return .PT_P910BT
         case .PT_P950NW: return .PT_P950NW
@@ -588,6 +588,7 @@ enum BrotherSDKBridge {
         case .noError, .canceled: return nil
         case .alreadySearching: return NSLocalizedString("brother.search.busy", comment: "")
         case .unsupported: return NSLocalizedString("brother.search.unsupported", comment: "")
+        case .communicationError: return NSLocalizedString("brother.search.communication", comment: "")
         default: return NSLocalizedString("brother.search.failed", comment: "")
         }
     }
