@@ -45,12 +45,15 @@ public struct DocumentRasterizer {
         case text(String, size: Int, bold: Bool, underline: Bool, inverted: Bool, alignment: ESCPOS.Alignment)
         case bitmap(MonochromeBitmap, height: CGFloat)
         case blank(CGFloat)
+        /// Trait plein, simple ou double, en travers de la page.
+        case rule(double: Bool)
 
         var height: CGFloat {
             switch self {
             case let .text(_, size, _, _, _, _): return 24 * CGFloat(size)
             case let .bitmap(_, height): return height
             case let .blank(height): return height
+            case .rule: return 24
             }
         }
     }
@@ -91,8 +94,17 @@ public struct DocumentRasterizer {
                 }
 
             case let .separator(character):
-                blocks.append(.text(String(repeating: String(character), count: columns), size: 1,
-                                    bold: false, underline: false, inverted: false, alignment: .left))
+                // Des tirets en police sortent haches une fois seuilles:
+                // les traits sont dessines pleins.
+                switch character {
+                case "-", "_", "\u{2014}", "\u{2500}":
+                    blocks.append(.rule(double: false))
+                case "=", "\u{2550}":
+                    blocks.append(.rule(double: true))
+                default:
+                    blocks.append(.text(String(repeating: String(character), count: columns), size: 1,
+                                        bold: false, underline: false, inverted: false, alignment: .left))
+                }
 
             case let .feed(lines):
                 blocks.append(.blank(lineHeight * CGFloat(lines)))
@@ -137,6 +149,17 @@ public struct DocumentRasterizer {
             context.scaleBy(x: 1, y: -1)
             context.draw(image, in: CGRect(x: 0, y: 0, width: CGFloat(width), height: height))
             context.restoreGState()
+
+        case let .rule(double):
+            context.setFillColor(gray: 0, alpha: 1)
+            let thickness: CGFloat = 2
+            let middle = y + 12
+            if double {
+                context.fill(CGRect(x: 0, y: middle - 3, width: CGFloat(width), height: thickness))
+                context.fill(CGRect(x: 0, y: middle + 1, width: CGFloat(width), height: thickness))
+            } else {
+                context.fill(CGRect(x: 0, y: middle - 1, width: CGFloat(width), height: thickness))
+            }
 
         case .blank:
             break
