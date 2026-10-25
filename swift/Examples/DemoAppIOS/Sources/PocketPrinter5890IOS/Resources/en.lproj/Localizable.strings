@@ -205,3 +205,4 @@
 "quality.halftone.patternDither" = "Pattern dither";
 "quality.threshold" = "Black/white threshold: %d";
 "quality.footer" = "Density applies to TD printers only.";
+"brother.log.empty" = "Brother log is empty: search or print to fill it.";

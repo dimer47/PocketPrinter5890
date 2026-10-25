@@ -474,16 +474,6 @@ struct BrotherConnectionSections: View {
                 Button("brother.target.forget", role: .destructive) { brother.target = nil }
             }
         }
-
-        if !brother.events.isEmpty {
-            Section("brother.log") {
-                ForEach(brother.events.suffix(12).reversed()) { event in
-                    Text(event.text)
-                        .font(.caption)
-                        .foregroundColor(event.isError ? .red : .secondary)
-                }
-            }
-        }
     }
 
     /// La recherche se fait sur l'interface choisie, ramenee a une

@@ -205,3 +205,4 @@
 "quality.halftone.patternDither" = "Motif";
 "quality.threshold" = "Seuil noir/blanc : %d";
 "quality.footer" = "La densité ne s'applique qu'aux TD.";
+"brother.log.empty" = "Journal Brother vide : recherchez ou imprimez pour le remplir.";

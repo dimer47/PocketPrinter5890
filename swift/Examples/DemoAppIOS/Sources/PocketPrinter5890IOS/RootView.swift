@@ -37,7 +37,7 @@ struct RootView: View {
             .tabItem { Label("tab.settings", systemImage: "slider.horizontal.3") }
 
             NavigationView {
-                ConsoleView(transport: transport)
+                ConsoleView(transport: transport, setup: setup, brother: brother)
             }
             .navigationViewStyle(.stack)
             .tabItem { Label("tab.console", systemImage: "terminal") }

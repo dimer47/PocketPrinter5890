@@ -3,10 +3,43 @@ import SwiftUI
 
 /// Console hexadecimale: indispensable pour verifier ce qui part et ce qui
 /// revient, notamment les trames de credit.
+///
+/// Avec une Brother, le SDK parle seul a l'imprimante: la console montre
+/// alors le journal Brother a la place des trames.
 struct ConsoleView: View {
     @ObservedObject var transport: PocketPrinter5890BLE
+    @ObservedObject var setup: PrinterSetup
+    @ObservedObject var brother: BrotherPrinterService
 
     var body: some View {
+        Group {
+            if setup.brand == .brother {
+                brotherLog
+            } else {
+                hexLog
+            }
+        }
+    }
+
+    private var brotherLog: some View {
+        List(brother.events.reversed()) { event in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.date, style: .time)
+                    .font(.caption2.monospaced())
+                    .foregroundColor(.secondary)
+                Text(event.text)
+                    .font(.caption)
+                    .foregroundColor(event.isError ? .red : .primary)
+            }
+        }
+        .overlay {
+            if brother.events.isEmpty {
+                Text("brother.log.empty").foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private var hexLog: some View {
         List(transport.log.suffix(300).reversed()) { entry in
             VStack(alignment: .leading, spacing: 2) {
                 HStack {

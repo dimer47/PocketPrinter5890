@@ -271,7 +271,7 @@ final class BrotherPrinterService: ObservableObject {
 
     private func log(_ text: String, isError: Bool = false) {
         events.append(Event(text: text, isError: isError))
-        if events.count > 50 { events.removeFirst(events.count - 50) }
+        if events.count > 200 { events.removeFirst(events.count - 200) }
     }
 }
 
