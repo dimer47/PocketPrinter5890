@@ -194,3 +194,14 @@
 "brother.error.canceled" = "Impression annulée.";
 "brother.error.printer" = "Erreur de l'imprimante.";
 "brother.error.unsupportedChannel" = "Interface non gérée par l'application.";
+
+"quality.header" = "4. Qualité d'impression";
+"quality.density.printer" = "Densité de l'imprimante";
+"quality.density" = "Densité : %@";
+"quality.best" = "Meilleure qualité (plus lent)";
+"quality.halftone" = "Tramage";
+"quality.halftone.threshold" = "Seuil (texte, codes)";
+"quality.halftone.errorDiffusion" = "Diffusion d'erreur (photos)";
+"quality.halftone.patternDither" = "Motif";
+"quality.threshold" = "Seuil noir/blanc : %d";
+"quality.footer" = "La densité ne s'applique qu'aux TD.";

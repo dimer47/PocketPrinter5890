@@ -388,7 +388,8 @@ enum BrotherSDKBridge {
             settings.autoCut = job.cut.autoCut
             settings.autoCutForEachPageCount = job.cut.clampedCutEveryPages
             settings.cutAtEnd = job.cut.cutAtEnd
-            applyImageDefaults(settings, copies: job.copies)
+            settings.density = tdDensity(job.quality.density)
+            applyImageDefaults(settings, job: job)
             return settings
 
         case .rj:
@@ -396,7 +397,7 @@ enum BrotherSDKBridge {
             if case let .custom(paper) = job.media {
                 settings.customPaperSize = customPaperSize(paper)
             }
-            applyImageDefaults(settings, copies: job.copies)
+            applyImageDefaults(settings, job: job)
             return settings
 
         case .ql:
@@ -408,7 +409,7 @@ enum BrotherSDKBridge {
             settings.autoCut = job.cut.autoCut
             settings.autoCutForEachPageCount = job.cut.clampedCutEveryPages
             settings.cutAtEnd = job.cut.cutAtEnd
-            applyImageDefaults(settings, copies: job.copies)
+            applyImageDefaults(settings, job: job)
             return settings
 
         case .pt:
@@ -419,7 +420,7 @@ enum BrotherSDKBridge {
             }
             settings.autoCut = job.cut.autoCut
             settings.autoCutForEachPageCount = job.cut.clampedCutEveryPages
-            applyImageDefaults(settings, copies: job.copies)
+            applyImageDefaults(settings, job: job)
             return settings
 
         case .pj:
@@ -427,24 +428,37 @@ enum BrotherSDKBridge {
             if case let .sheet(sheet) = job.media {
                 settings.paperSize = BRLMPJPrintSettingsPaperSize(paperSizeStandard: paperSizeStandard(sheet))
             }
-            applyImageDefaults(settings, copies: job.copies)
+            applyImageDefaults(settings, job: job)
             return settings
 
         case .mw:
             guard let settings = BRLMMWPrintSettings(defaultPrintSettingsWith: model) else { return nil }
-            applyImageDefaults(settings, copies: job.copies)
+            applyImageDefaults(settings, job: job)
             return settings
         }
     }
 
-    private static func applyImageDefaults(_ settings: BRLMPrintImageSettings, copies: Int) {
-        settings.numCopies = UInt(max(1, copies))
+    private static func tdDensity(_ level: Int?) -> BRLMTDPrintSettingsDensity {
+        guard let level else { return .usePrinterSetting }
+        // L'enum va de WeakLevel5 (0) a StrongLevel5 (10), Neutral au milieu.
+        return BRLMTDPrintSettingsDensity(rawValue: min(5, max(-5, level)) + 5) ?? .neutral
+    }
+
+    private static func applyImageDefaults(_ settings: BRLMPrintImageSettings, job: BrotherJob) {
+        settings.numCopies = UInt(max(1, job.copies))
         // L'image est mise a la largeur du papier en gardant ses proportions.
         settings.scaleMode = .fitPageAspect
         settings.hAlignment = .center
         settings.vAlignment = .center
         // Texte et codes: un seuil donne des traits nets, sans trame.
-        settings.halftone = .threshold
+        // Photos: la diffusion d'erreur rend mieux les gris.
+        switch job.quality.halftone {
+        case .threshold: settings.halftone = .threshold
+        case .errorDiffusion: settings.halftone = .errorDiffusion
+        case .patternDither: settings.halftone = .patternDither
+        }
+        settings.halftoneThreshold = UInt8(clamping: min(255, max(0, job.quality.threshold)))
+        settings.printQuality = job.quality.bestQuality ? .best : .fast
     }
 
     private static func customPaperSize(_ paper: BrotherPaper) -> BRLMCustomPaperSize {

@@ -17,6 +17,7 @@ struct ConnectionView: View {
 
             if setup.brand == .brother {
                 BrotherCutSection(setup: setup)
+                BrotherQualitySection(setup: setup)
                 BrotherConnectionSections(setup: setup, brother: brother)
             } else {
                 pocketSections

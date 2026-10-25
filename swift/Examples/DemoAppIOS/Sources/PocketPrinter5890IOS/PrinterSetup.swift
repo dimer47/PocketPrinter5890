@@ -32,6 +32,11 @@ final class PrinterSetup: ObservableObject {
         didSet { storeEncoded(cut, for: .cut) }
     }
 
+    /// Densite, qualite et tramage du rendu.
+    @Published var quality: BrotherQualityOptions {
+        didSet { storeEncoded(quality, for: .quality) }
+    }
+
     @Published var copies: Int {
         didSet { store(copies, for: .copies) }
     }
@@ -44,6 +49,7 @@ final class PrinterSetup: ObservableObject {
         case brotherMedia = "printer.brother.media"
         case cut = "printer.brother.cut"
         case copies = "printer.brother.copies"
+        case quality = "printer.brother.quality"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -56,12 +62,13 @@ final class PrinterSetup: ObservableObject {
         brotherMedia = media.flatMap { $0.isCompatible(with: model) ? $0 : nil }
             ?? .defaultMedia(for: model)
         cut = Self.decode(defaults.data(forKey: Key.cut.rawValue)) ?? BrotherCutOptions()
+        quality = Self.decode(defaults.data(forKey: Key.quality.rawValue)) ?? BrotherQualityOptions()
         copies = max(1, defaults.object(forKey: Key.copies.rawValue) as? Int ?? 1)
     }
 
     /// Travail Brother correspondant aux choix courants.
     var brotherJob: BrotherJob {
-        BrotherJob(model: brotherModel, media: brotherMedia, cut: cut, copies: copies)
+        BrotherJob(model: brotherModel, media: brotherMedia, cut: cut, quality: quality, copies: copies)
     }
 
     private func store(_ value: Any, for key: Key) {
@@ -82,5 +89,21 @@ struct BrotherJob {
     let model: BrotherModel
     let media: BrotherMedia
     let cut: BrotherCutOptions
+    let quality: BrotherQualityOptions
     let copies: Int
+}
+
+/// Reglages de rendu transmis au SDK Brother.
+struct BrotherQualityOptions: Hashable, Codable {
+    enum Halftone: String, Codable, CaseIterable {
+        case threshold, errorDiffusion, patternDither
+    }
+
+    /// De -5 (plus clair) a +5 (plus fonce). `nil`: reglage de l'imprimante.
+    /// Pris en compte seulement par les TD.
+    var density: Int?
+    var bestQuality = false
+    var halftone: Halftone = .threshold
+    /// Seuil noir/blanc, utilise seulement avec le tramage `threshold`.
+    var threshold = 127
 }

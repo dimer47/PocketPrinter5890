@@ -339,6 +339,49 @@ struct BrotherCutSection: View {
     }
 }
 
+// MARK: - Qualite d'impression Brother
+
+struct BrotherQualitySection: View {
+    @ObservedObject var setup: PrinterSetup
+
+    var body: some View {
+        Section {
+            if setup.brotherModel.series == .td {
+                Toggle("quality.density.printer", isOn: Binding(
+                    get: { setup.quality.density == nil },
+                    set: { setup.quality.density = $0 ? nil : 0 }))
+                if let density = setup.quality.density {
+                    Stepper(value: Binding(get: { density },
+                                           set: { setup.quality.density = $0 }),
+                            in: -5...5) {
+                        Text(String(format: NSLocalizedString("quality.density", comment: ""),
+                                    density > 0 ? "+\(density)" : "\(density)"))
+                    }
+                }
+            }
+            Toggle("quality.best", isOn: $setup.quality.bestQuality)
+            Picker("quality.halftone", selection: $setup.quality.halftone) {
+                Text("quality.halftone.threshold").tag(BrotherQualityOptions.Halftone.threshold)
+                Text("quality.halftone.errorDiffusion").tag(BrotherQualityOptions.Halftone.errorDiffusion)
+                Text("quality.halftone.patternDither").tag(BrotherQualityOptions.Halftone.patternDither)
+            }
+            if setup.quality.halftone == .threshold {
+                VStack(alignment: .leading) {
+                    Text(String(format: NSLocalizedString("quality.threshold", comment: ""),
+                                setup.quality.threshold))
+                    Slider(value: Binding(get: { Double(setup.quality.threshold) },
+                                          set: { setup.quality.threshold = Int($0) }),
+                           in: 0...255, step: 1)
+                }
+            }
+        } header: {
+            Text("quality.header")
+        } footer: {
+            Text("quality.footer")
+        }
+    }
+}
+
 // MARK: - Connexion Brother
 
 struct BrotherConnectionSections: View {

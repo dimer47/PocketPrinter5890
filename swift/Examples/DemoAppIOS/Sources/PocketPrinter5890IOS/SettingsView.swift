@@ -14,6 +14,7 @@ struct SettingsView: View {
                 // La coupe et les copies sont les seuls reglages Brother de
                 // l'application; le reste suit les valeurs de l'imprimante.
                 BrotherCutSection(setup: setup)
+                BrotherQualitySection(setup: setup)
             } else {
                 pocketSettings
             }

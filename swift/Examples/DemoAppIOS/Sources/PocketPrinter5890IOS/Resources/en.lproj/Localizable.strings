@@ -194,3 +194,14 @@
 "brother.error.canceled" = "Printing cancelled.";
 "brother.error.printer" = "Printer error.";
 "brother.error.unsupportedChannel" = "Interface not supported by this app.";
+
+"quality.header" = "4. Print quality";
+"quality.density.printer" = "Printer density";
+"quality.density" = "Density: %@";
+"quality.best" = "Best quality (slower)";
+"quality.halftone" = "Halftone";
+"quality.halftone.threshold" = "Threshold (text, codes)";
+"quality.halftone.errorDiffusion" = "Error diffusion (photos)";
+"quality.halftone.patternDither" = "Pattern dither";
+"quality.threshold" = "Black/white threshold: %d";
+"quality.footer" = "Density applies to TD printers only.";
